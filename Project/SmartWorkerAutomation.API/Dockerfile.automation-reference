@@ -1,0 +1,33 @@
+# --- Build stage ---
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+# Copy every project the API depends on (Common/Repository/Services are
+# separate projects referenced by SmartWorker.API.csproj, not NuGet
+# packages) - restore needs all of them present before it can resolve
+# project references.
+COPY Common/Common.csproj Common/
+COPY Repository/Repository.csproj Repository/
+COPY Services/Services.csproj Services/
+COPY SmartWorker/SmartWorker.API.csproj SmartWorker/
+RUN dotnet restore SmartWorker/SmartWorker.API.csproj
+
+COPY Common/ Common/
+COPY Repository/ Repository/
+COPY Services/ Services/
+COPY SmartWorker/ SmartWorker/
+RUN dotnet publish SmartWorker/SmartWorker.API.csproj -c Release -o /app/publish --no-restore
+
+# --- Runtime stage ---
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+
+# appsettings.json (with the real ConnectionStrings/Jwt/Cors values) is
+# already in the repo and gets published as part of the SmartWorker project,
+# so no separate copy step or secret-mounting is required for this setup -
+# see the deployment notes for why you may want to move those values to
+# environment variables instead before this goes further.
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENTRYPOINT ["dotnet", "SmartWorker.API.dll"]

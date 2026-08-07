@@ -1,0 +1,191 @@
+using Repository;
+using Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.OpenApi;
+using SmartWorker.BackgroundServices;
+using SmartWorker.Middleware;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Every hand-written SQL statement lives in Config/Queries.json, not inline
+// in C# - see Repository/IQueryStore.cs. reloadOnChange means editing a
+// query takes effect on next request, no rebuild/redeploy needed.
+builder.Configuration.AddJsonFile("Config/Queries.json", optional: false, reloadOnChange: true);
+
+// Add services to the container.
+builder.Services.AddSingleton<DbConnectionFactory>();
+builder.Services.AddSingleton<IQueryStore, QueryStore>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IInquiryService, InquiryService>();
+builder.Services.AddScoped<IRecordsExportService, RecordsExportService>();
+builder.Services.AddScoped<IRecordsImportValidationService, RecordsImportValidationService>();
+builder.Services.AddScoped<IFileIngestionService, FileIngestionService>();
+builder.Services.AddScoped<IStagingReviewService, StagingReviewService>();
+builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IReplyReviewService, ReplyReviewService>();
+builder.Services.AddHttpClient<N8nIngestionClient>();
+builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<INotificationsService, NotificationsService>();
+
+// Native replacement for the retired n8n workflow "WF: Daily Refresh
+// Automation Records (5AM)" - see BackgroundServices/DailyAutomationRefreshService.cs.
+// Runs entirely in-process on a 5:00 AM IST schedule; no n8n involved.
+builder.Services.AddHostedService<DailyAutomationRefreshService>();
+
+// Native replacement for the retired n8n workflow "WF: Reminder Send
+// (Automation) Latest" - see BackgroundServices/ReminderSendBackgroundService.cs.
+// Runs entirely in-process on a 1-minute polling loop; the n8n workflow
+// stays deployed and active for now (parallel-run until verified), per the
+// planned cutover.
+builder.Services.AddHostedService<ReminderSendBackgroundService>();
+
+// Native replacement for the retired n8n workflow "WF: Reconcile WhatsApp
+// Status (Schedule)" - see BackgroundServices/ReconcileWhatsAppStatusBackgroundService.cs.
+// Runs entirely in-process on a 2-minute polling loop; no n8n involved.
+builder.Services.AddHostedService<ReconcileWhatsAppStatusBackgroundService>();
+
+// Native replacement for the retired n8n workflow "WF: Reply Processor
+// (Classify)" - see BackgroundServices/ReplyClassificationBackgroundService.cs.
+// Requires OpenAI:ApiKey and Firebase:ServiceAccountEmail/ProjectId/
+// PrivateKeyPem in appsettings.json (placeholders added, real values still
+// needed) before this can actually classify replies or send push
+// notifications - it will throw on first use until those are filled in.
+builder.Services.AddHttpClient<IReplyClassificationService, ReplyClassificationService>();
+builder.Services.AddHttpClient<IFirebasePushService, FirebasePushService>();
+builder.Services.AddHostedService<ReplyClassificationBackgroundService>();
+
+// Native replacement for the retired n8n workflow "WF: Inbound Email
+// (Reply Capture)" - see BackgroundServices/InboundEmailBackgroundService.cs.
+// Requires Gmail:ClientId/ClientSecret/RefreshToken in appsettings.json
+// (placeholders added, real values still needed).
+builder.Services.AddHttpClient<GmailClient>();
+builder.Services.AddHostedService<InboundEmailBackgroundService>();
+
+// Native replacement for the retired n8n workflow "WF: Reply Capture
+// WhatsApp (Sub-workflow)" - see Controllers/WhatsAppWebhookController.cs
+// and Services/WhatsAppInboundService.cs. Meta's webhook subscription still
+// needs to be repointed at this API's /api/whatsapp/webhook once
+// Meta:WebhookVerifyToken (and ideally Meta:AppSecret) are configured -
+// this is the one piece of the migration that's a hard cutover, not a
+// parallel-run.
+builder.Services.AddScoped<IWhatsAppInboundService, WhatsAppInboundService>();
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+
+const string AngularDevCorsPolicy = "AngularDevCorsPolicy";
+
+// Origins allowed to call this API: local dev, the deployed web app, and the
+// two fixed origins Capacitor WebViews present (Android with
+// androidScheme:'https' -> https://localhost, iOS -> capacitor://localhost).
+// Configurable via appsettings so new origins (staging, a new domain) don't
+// need a code change/rebuild - just add to Cors:AllowedOrigins and restart.
+var configuredOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+var defaultOrigins = new[]
+{
+    "http://localhost:4200",       // local Angular dev server (web)
+    "http://localhost:4201",       // local Angular dev server (mobile - projects/mobile, `ng serve mobile --port 4201`)
+    "https://localhost",           // Capacitor Android (androidScheme: 'https')
+    "capacitor://localhost",       // Capacitor iOS
+};
+var allowedOrigins = defaultOrigins.Concat(configuredOrigins).Distinct().ToArray();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(AngularDevCorsPolicy, policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key not configured."));
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+});
+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "SmartWorker API", Version = "v1" });
+    c.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "JWT Authorization header using the Bearer scheme."
+    });
+    c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("bearer", document)] = new List<string>()
+    });
+});
+
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
+
+var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+// Behind Nginx Proxy Manager, this app receives plain HTTP inside the Docker
+// network while NPM terminates the real HTTPS connection - it forwards
+// X-Forwarded-Proto so ASP.NET Core knows the original request was HTTPS.
+// Without this, UseHttpsRedirection() below would try to redirect every
+// request to https, causing a redirect loop through the proxy. Clearing
+// KnownNetworks/KnownProxies is the standard simplification for a
+// single-VPS docker-compose setup where the proxy's container IP isn't
+// fixed/predictable - only NPM is exposed publicly, so this is safe here.
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+forwardedHeadersOptions.KnownIPNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeadersOptions);
+
+app.UseHttpsRedirection();
+
+app.UseCors(AngularDevCorsPolicy);
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();

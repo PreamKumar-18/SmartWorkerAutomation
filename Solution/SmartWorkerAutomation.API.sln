@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11415.280
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartWorkerAutomation.API", "..\Project\SmartWorkerAutomation.API\SmartWorkerAutomation.API.csproj", "{15BD5981-7E21-0212-0B25-A274707D7CB6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartWorkerAutomation.Common", "..\Project\SmartWorkerAutomation.Common\SmartWorkerAutomation.Common.csproj", "{6B93C15E-195E-F943-4B2B-3D03D468C35A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartWorkerAutomation.Configuration", "..\Project\SmartWorkerAutomation.Configuration\SmartWorkerAutomation.Configuration.csproj", "{256A9BF5-9C90-4F21-72E2-ACC8B87733C6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartWorkerAutomation.Core", "..\Project\SmartWorkerAutomation.Core\SmartWorkerAutomation.Core.csproj", "{998C3FA3-EDE6-A661-D52C-6266EE50CE3B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartWorkerAutomation.DataProvider", "..\Project\SmartWorkerAutomation.DataProvider\SmartWorkerAutomation.DataProvider.csproj", "{0A4FA1EB-A1D4-3987-7A4D-A945230B2DAA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartWorkerAutomation.Transformation", "..\Project\SmartWorkerAutomation.Transformation\SmartWorkerAutomation.Transformation.csproj", "{D1545FCC-628D-6431-2FBC-B28164628488}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{15BD5981-7E21-0212-0B25-A274707D7CB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15BD5981-7E21-0212-0B25-A274707D7CB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15BD5981-7E21-0212-0B25-A274707D7CB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15BD5981-7E21-0212-0B25-A274707D7CB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B93C15E-195E-F943-4B2B-3D03D468C35A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B93C15E-195E-F943-4B2B-3D03D468C35A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B93C15E-195E-F943-4B2B-3D03D468C35A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B93C15E-195E-F943-4B2B-3D03D468C35A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{256A9BF5-9C90-4F21-72E2-ACC8B87733C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{256A9BF5-9C90-4F21-72E2-ACC8B87733C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{256A9BF5-9C90-4F21-72E2-ACC8B87733C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{256A9BF5-9C90-4F21-72E2-ACC8B87733C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{998C3FA3-EDE6-A661-D52C-6266EE50CE3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{998C3FA3-EDE6-A661-D52C-6266EE50CE3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{998C3FA3-EDE6-A661-D52C-6266EE50CE3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{998C3FA3-EDE6-A661-D52C-6266EE50CE3B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A4FA1EB-A1D4-3987-7A4D-A945230B2DAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A4FA1EB-A1D4-3987-7A4D-A945230B2DAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A4FA1EB-A1D4-3987-7A4D-A945230B2DAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A4FA1EB-A1D4-3987-7A4D-A945230B2DAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1545FCC-628D-6431-2FBC-B28164628488}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1545FCC-628D-6431-2FBC-B28164628488}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1545FCC-628D-6431-2FBC-B28164628488}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1545FCC-628D-6431-2FBC-B28164628488}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {216AF694-6B13-42EF-A2BA-0666182F2F80}
+	EndGlobalSection
+EndGlobal

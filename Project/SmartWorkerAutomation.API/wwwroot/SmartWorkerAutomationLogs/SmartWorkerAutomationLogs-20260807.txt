@@ -1,0 +1,48 @@
+2026-08-07 20:56:22.057 +05:30 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.InvalidOperationException: Gmail:RefreshToken not configured.
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.RequireConfig(IConfiguration configuration, String key) in D:\Automation\SmartWorkerAutomation\SmartWorkerAutomation\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 110
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient..ctor(HttpClient httpClient, IConfiguration configuration) in D:\Automation\SmartWorkerAutomation\SmartWorkerAutomation\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 28
+   at lambda_method1(Closure, IServiceProvider, Object[])
+   at Microsoft.Extensions.Http.DefaultTypedHttpClientFactory`1.CreateClient(HttpClient httpClient)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.<>c__DisplayClass2_0.<RealizeService>b__0(ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in D:\Automation\SmartWorkerAutomation\SmartWorkerAutomation\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 102
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in D:\Automation\SmartWorkerAutomation\SmartWorkerAutomation\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 76
+2026-08-07 20:56:38.134 +05:30 [ERR] WF: Reconcile WhatsApp Status (Schedule) - reconcile call failed; will retry next cycle.
+Npgsql.NpgsqlException (0x80004005): The operation has timed out
+ ---> System.TimeoutException: The operation has timed out.
+   at Npgsql.ThrowHelper.ThrowNpgsqlExceptionWithInnerTimeoutException(String message)
+   at Npgsql.Util.NpgsqlTimeout.Check()
+   at Npgsql.Util.NpgsqlTimeout.CheckAndGetTimeLeft()
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param) in /_/Dapper/SqlMapper.Async.cs:line 662
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in D:\Automation\SmartWorkerAutomation\SmartWorkerAutomation\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 42
+2026-08-07 20:56:38.134 +05:30 [ERR] WF: Reply Processor (Classify) - poll cycle failed; will retry next cycle.
+Npgsql.NpgsqlException (0x80004005): The operation has timed out
+ ---> System.TimeoutException: The operation has timed out.
+   at Npgsql.ThrowHelper.ThrowNpgsqlExceptionWithInnerTimeoutException(String message)
+   at Npgsql.Util.NpgsqlTimeout.Check()
+   at Npgsql.Util.NpgsqlTimeout.CheckAndGetTimeLeft()
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 433
+   at SmartWorkerAutomation.API.BackgroundServices.ReplyClassificationBackgroundService.RunPollCycleAsync(CancellationToken stoppingToken) in D:\Automation\SmartWorkerAutomation\SmartWorkerAutomation\Project\SmartWorkerAutomation.API\BackgroundServices\ReplyClassificationBackgroundService.cs:line 101
+   at SmartWorkerAutomation.API.BackgroundServices.ReplyClassificationBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in D:\Automation\SmartWorkerAutomation\SmartWorkerAutomation\Project\SmartWorkerAutomation.API\BackgroundServices\ReplyClassificationBackgroundService.cs:line 74

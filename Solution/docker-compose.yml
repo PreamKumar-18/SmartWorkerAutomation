@@ -1,0 +1,23 @@
+services:
+  smartworker-api:
+    build:
+      context: .
+      dockerfile: SmartWorker/Dockerfile
+    container_name: smartworker-api
+    ports:
+      - "8082:8080"   # kept for direct/debug access - Traefik below is the real public path
+    restart: unless-stopped
+    networks:
+      - default
+      - traefik_net
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.smartworker-api.rule=Host(`api.devautomation.tech`)
+      - traefik.http.routers.smartworker-api.tls=true
+      - traefik.http.routers.smartworker-api.entrypoints=web,websecure
+      - traefik.http.routers.smartworker-api.tls.certresolver=mytlschallenge
+      - traefik.http.services.smartworker-api.loadbalancer.server.port=8080
+
+networks:
+  traefik_net:
+    external: true

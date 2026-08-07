@@ -1,0 +1,201 @@
+{
+  "Queries": {
+    "_comment": "Every hand-written SQL statement the API runs, keyed by Section:Key and read via IQueryStore (see Repository/QueryStore.cs). {Token} placeholders are structural SQL fragments (table/view name, an optional WHERE/AND clause, an ORDER BY) substituted in C# before the string reaches Dapper - never user input. Actual values always stay real Dapper @parameters. Edits here take effect without a rebuild (reloadOnChange is on in Program.cs).",
+
+    "InboundMessages": {
+      "_comment": "Shared by InboundEmailBackgroundService and WhatsAppInboundService (both retired-n8n replacements) - same fn_match_inbound_message() call n8n's 'Match To Record'/'Match To Record1' nodes made.",
+      "MatchToRecord": "SELECT public.fn_match_inbound_message(@Id) AS matched_record_id"
+    },
+
+    "InboundEmail": {
+      "_comment": "Native replacement for the retired n8n 'WF: Inbound Email (Reply Capture)' workflow (Gmail Trigger -> Normalize Email Reply -> Insert Inbound Message -> Match To Record). See SmartWorker/BackgroundServices/InboundEmailBackgroundService.cs.",
+      "Insert": "INSERT INTO inbound_messages\n  (channel, external_id, in_reply_to_id, from_email, subject, body_text, raw, is_auto_reply)\nSELECT 'email', @ExternalId, @InReplyToId, @FromEmail, @Subject, @BodyText, @Raw::jsonb, @IsAutoReply\nWHERE EXISTS (\n  SELECT 1 FROM automation_records WHERE email_thread_id = @InReplyToId\n)\nON CONFLICT (channel, external_id) WHERE external_id IS NOT NULL\nDO NOTHING\nRETURNING id"
+    },
+
+    "WhatsAppCapture": {
+      "_comment": "Native replacement for the retired n8n 'WF: Reply Capture WhatsApp (Sub-workflow)' workflow's active nodes (Normalize WhatsApp Event -> Is Delivery Status? -> Store + Reconcile Delivery Status / Insert Inbound Message1 -> Match To Record1). See SmartWorker/Controllers/WhatsAppWebhookController.cs and Services/WhatsAppInboundService.cs.",
+      "InsertInboundMessage": "INSERT INTO inbound_messages\n  (channel, external_id, in_reply_to_id, from_phone, body_text, received_at, raw, is_auto_reply)\nVALUES\n  ('whatsapp', @ExternalId, @InReplyToId, @FromPhone, @BodyText, to_timestamp(@Timestamp::bigint), @Raw::jsonb, false)\nON CONFLICT (channel, external_id) WHERE external_id IS NOT NULL\nDO NOTHING\nRETURNING id",
+      "InsertStatusEventAndReconcile": "INSERT INTO public.whatsapp_status_events (wamid, status, error_code, recipient, event_ts)\nVALUES (@Wamid, @Status, @ErrorCode, @Recipient, to_timestamp(@EventTs::double precision))\nON CONFLICT (wamid, status) DO NOTHING;\n\nSELECT public.fn_reconcile_whatsapp_status();"
+    },
+
+    "ReplyReview": {
+      "GetQueue": "SELECT * FROM v_reply_review\n--WHERE status_name = 'human_approval'\nORDER BY created_at DESC",
+      "PersistEdits": "UPDATE reply_intents\nSET promised_date   = COALESCE(@EditedPromisedDate, promised_date),\n    promised_amount = COALESCE(@EditedPromisedAmount, promised_amount)\nWHERE id = @ReplyIntentId",
+      "Apply": "SELECT fn_apply_reply_intent_by_record(@ReplyIntentId, false)",
+      "SetAudit": "UPDATE reply_intents\nSET reviewed_by = @ReviewedBy,\n    reviewed_at = now()\nWHERE id = @ReplyIntentId",
+      "Reject": "UPDATE reply_intents\nSET status_id   = (SELECT id FROM reply_status WHERE status_name = 'rejected'),\n    reviewed_by = @ReviewedBy,\n    reviewed_at = now()\nWHERE id = @ReplyIntentId",
+      "RecordsInReview": "SELECT *\nFROM {ViewName}\nWHERE id IN (\n  SELECT DISTINCT matched_record_id\n  FROM reply_intents\n  WHERE matched_record_id IS NOT NULL\n    AND status_id = (SELECT id FROM reply_status WHERE status_name = 'human_approval')\n)",
+      "ApplyByRecord": "SELECT fn_apply_reply_intent_by_record(@p_matched_record_id, @p_auto)"
+    },
+
+    "Dashboard": {
+      "CategorySummary": {
+        "Finance": "SELECT\n    COUNT(*) AS total_records,\n    COUNT(*) FILTER (WHERE COALESCE(day_overdue, 0) > 0) AS overdue_count,\n    COALESCE(SUM(outstanding_amountcal::numeric) FILTER (WHERE COALESCE(day_overdue, 0) > 0), 0) AS overdue_amount,\n    COUNT(*) FILTER (WHERE last_reminder_sent::date = CURRENT_DATE) AS reminders_today\nFROM {ViewName}\n{UserFilter}",
+        "Purchase": "SELECT\n    COUNT(*) AS total_records,\n    COUNT(*) FILTER (WHERE COALESCE(day_overdue, 0) > 0) AS overdue_count,\n    COALESCE(SUM(amount::numeric) FILTER (WHERE COALESCE(day_overdue, 0) > 0), 0) AS overdue_amount,\n    COUNT(*) FILTER (WHERE last_reminder_sent::date = CURRENT_DATE) AS reminders_today\nFROM {ViewName}\n{UserFilter}",
+        "Inventory": "SELECT\n    COUNT(*) AS total_records,\n    COUNT(*) FILTER (WHERE stock_status = 'out') AS out_of_stock_count,\n    COUNT(*) FILTER (WHERE stock_status = 'low') AS low_stock_count,\n    COUNT(*) FILTER (WHERE last_reminder_sent::date = CURRENT_DATE) AS reminders_today\nFROM {ViewName}\n{UserFilter}",
+        "DispatchProduction": "SELECT\n    COUNT(*) AS total_records,\n    COUNT(*) FILTER (WHERE COALESCE(day_overdue, 0) > 0) AS overdue_count,\n    COUNT(*) FILTER (WHERE last_reminder_sent::date = CURRENT_DATE) AS reminders_today\nFROM {ViewName}\n{UserFilter}"
+      },
+      "ReminderTrend": "WITH reminders AS (\n    SELECT {BucketExpr} AS bucket,\n        COUNT(*) FILTER (WHERE n.email_status = 'sent') AS email_sent,\n        COUNT(*) FILTER (WHERE n.whatsapp_status = 'sent') AS whatsapp_sent,\n        COUNT(*) AS reminders_sent\n    FROM notification_log n\n    JOIN {ViewName} v ON v.id = n.record_id\n    WHERE n.sent_at >= CURRENT_DATE - INTERVAL '{Interval}'\n    {UserFilter}\n    GROUP BY 1\n),\nreplies AS (\n    SELECT {ReplyBucketExpr} AS bucket,\n        COUNT(*) AS replies\n    FROM inbound_messages m\n    JOIN {ViewName} v ON v.id = m.matched_record_id\n    WHERE m.processing_status = 'matched' AND m.is_auto_reply = false\n        AND m.received_at >= CURRENT_DATE - INTERVAL '{Interval}'\n    {UserFilter}\n    GROUP BY 1\n)\nSELECT COALESCE(reminders.bucket, replies.bucket) AS bucket,\n    COALESCE(reminders.email_sent, 0) AS email_sent,\n    COALESCE(reminders.whatsapp_sent, 0) AS whatsapp_sent,\n    COALESCE(reminders.reminders_sent, 0) AS reminders_sent,\n    COALESCE(replies.replies, 0) AS replies\nFROM reminders\nFULL OUTER JOIN replies ON reminders.bucket = replies.bucket\nORDER BY 1",
+      "OverdueDetail": "SELECT * FROM {ViewName}\n{WhereClause}\n{UserFilter}\n{OrderClause}",
+      "RecordJourney": "SELECT 'reminder'::text AS event_type,\n    n.sent_at AS event_time,\n    n.rule_name AS rule_name,\n    n.email_status AS email_status,\n    n.whatsapp_status AS whatsapp_status,\n    n.email_subject AS email_subject,\n    n.email_body AS email_body,\n    (CASE WHEN n.whatsapp_body IS NOT NULL AND n.whatsapp_body <> '' THEN n.whatsapp_body::jsonb ELSE NULL END) #>> '{template,components,0,parameters,1,text}' AS whatsapp_text,\n    NULL::text AS channel,\n    NULL::text AS from_contact,\n    NULL::text AS body_text\nFROM notification_log n\nJOIN {ViewName} v ON v.id = n.record_id\nWHERE n.record_id = @RecordId\n\n\nUNION ALL\n\nSELECT 'reply'::text AS event_type,\n    m.received_at AS event_time,\n    NULL::text AS rule_name,\n    NULL::text AS email_status,\n    NULL::text AS whatsapp_status,\n    NULL::text AS email_subject,\n    NULL::text AS email_body,\n    NULL::text AS whatsapp_text,\n    m.channel AS channel,\n    COALESCE(m.from_phone, m.from_email) AS from_contact,\n    regexp_replace(m.body_text, '(On .*wrote:.*)', '', 'gs') AS body_text\nFROM inbound_messages m\nJOIN {ViewName} v ON v.id = m.matched_record_id\nWHERE m.matched_record_id = @RecordId\n    AND m.processing_status = 'matched' AND m.is_auto_reply = false\n \n\nORDER BY event_time",
+      "RuleHealth": "SELECT\n    alert_type,\n    COUNT(*) FILTER (WHERE is_active) AS active_count,\n    COUNT(*) FILTER (WHERE NOT is_active) AS inactive_count\nFROM rule_alert_configuration\nWHERE category_name = @CategoryName\nGROUP BY alert_type\nORDER BY alert_type",
+      "LoginSummary": {
+        "_comment": "Cross-category KPIs for the post-login landing page (DashboardService.GetLoginSummaryAsync). AmountPayable/AmountReceivable/PoCount/FinanceCount/PoReceivedAmount/GrnDueThisWeek/GrnOverdue read straight off purchase_view/finance_view (same views every other Dashboard/Inquiry/Records endpoint already uses) so they stay in sync with whatever those views already do (file_status='true' = active, userid scoping). RuleCounts is the exact join the user specified: rule_alert_configuration joined to automation_records on matchingruleid, filtered to Finance/Purchase and the Critical/Overdue rule names. GRN ('Goods Receipt Note') isn't its own column - a PO counts as 'received' once material_status is 'received' or 'delivered' (same condition Insights:Purchase:ResolvedThisMonth already uses); GrnDueThisWeek/GrnOverdue are POs NOT yet in that state, bucketed by expected_date vs today.",
+        "AmountPayable": "SELECT COALESCE(SUM(amount::numeric), 0) FROM public.purchase_view WHERE file_status = 'true' AND COALESCE(material_status, '') IN ('received', 'delivered', 'pending') {UserFilter}",
+        "AmountReceivable": "SELECT COALESCE(SUM(outstanding_amountcal::numeric), 0) FROM public.finance_view WHERE file_status = 'true' and payment_status!='paid' {UserFilter}",
+        "PoCount": "SELECT COUNT(*) FROM public.purchase_view WHERE file_status = 'true' AND COALESCE(material_status, '') IN ('received', 'delivered', 'pending') {UserFilter}",
+        "FinanceCount": "SELECT COUNT(*) FROM public.finance_view WHERE file_status = 'true' and payment_status!='paid' {UserFilter}",
+        "PoReceivedAmount": "SELECT COALESCE(SUM(amount::numeric), 0) FROM public.purchase_view WHERE file_status = 'true' AND material_status IN ('received', 'delivered') {UserFilter}",
+        "GrnDueThisWeek": "SELECT COUNT(*) FROM public.purchase_view WHERE file_status = 'true' AND COALESCE(material_status, '') NOT IN ('received', 'delivered') AND expected_date >= CURRENT_DATE AND expected_date < CURRENT_DATE + INTERVAL '7 days' {UserFilter}",
+        "GrnOverdue": "SELECT COUNT(*) FROM public.purchase_view WHERE file_status = 'true' AND COALESCE(material_status, '') NOT IN ('received', 'delivered') AND expected_date < CURRENT_DATE {UserFilter}",
+        "RuleCounts": "SELECT a.rule_name AS \"RuleName\", COUNT(*) AS \"Cnt\"\nFROM rule_alert_configuration a\nINNER JOIN automation_records b ON a.id = b.matchingruleid\nWHERE a.category_name IN ('Finance', 'Purchase')\n  AND a.rule_name IN ('Critical', 'Overdue')\n  AND b.file_status = 'true'\n  {UserFilter}\nGROUP BY a.rule_name"
+      },
+      "TileDetail": {
+        "_comment": "The actual record rows behind one Overview/LoginSummary tile (DashboardService.GetTileDetailAsync) - drives the tile-detail panel on the Overview page (see overview-page.component.ts's openTile/TILE_DETAIL_CONFIG on the frontend). Amount*/PoCount/FinanceCount/Grn* mirror the equivalent LoginSummary:* scalar query exactly, just SELECT * instead of COUNT/SUM, so the list always matches what the tile's number counted (AmountReceivable/FinanceCount additionally exclude payment_status='paid' rows - only outstanding invoices belong in an Amount Receivable list). The computed risk_status column (critical/overdue/open, derived from day_overdue - finance_view has no such column itself, only payment_status which means something else entirely) is deliberately NOT aliased 'status' - finance_view's own SELECT * already includes a real column literally named 'status' (an ingestion-internal duplicate-detection marker, not a display value - see records-field-schema.ts's comment), and 'SELECT *, (...) AS status' produces two same-named columns, which silently resolves to the empty ingestion one everywhere the frontend reads row.status. tile-detail.config.ts's amount_receivable/finance_count columns read risk_status, not status, for exactly this reason - don't reintroduce the collision. RuleMatched backs the overdue_count/critical_count tiles and spans both Finance AND Purchase (matching LoginSummary:RuleCounts exactly, which is what the tile's own number counts) - it does NOT join automation_records back to finance_view/purchase_view (no verified shared id), instead it splits automation_records.natural_key directly ('|'-joined per category_field_mapping.natural_key_order - see bulk_insert_automation_staging_ui_clear_prior.sql for how it's built) into unified client_name/client_phone/client_email/order_number columns - client_name/client_phone alias to supplier_name/supplier_phone for Purchase rows, order_number aliases to invoice_number (Finance) or purchase_id (Purchase); client_email is Finance-only (Purchase's natural_key has no email in it) so it's null for Purchase rows.",
+        "AmountReceivable": "SELECT *, (CASE WHEN COALESCE(day_overdue, 0) > 30 THEN 'critical' WHEN COALESCE(day_overdue, 0) > 0 THEN 'overdue' ELSE 'open' END) AS risk_status\nFROM public.finance_view\nWHERE file_status = 'true' and payment_status!='paid' {UserFilter}\nORDER BY outstanding_amountcal DESC",
+        "FinanceCount": "SELECT *, (CASE WHEN COALESCE(day_overdue, 0) > 30 THEN 'critical' WHEN COALESCE(day_overdue, 0) > 0 THEN 'overdue' ELSE 'open' END) AS risk_status\nFROM public.finance_view\nWHERE file_status = 'true' and payment_status!='paid' {UserFilter}\nORDER BY id DESC",
+        "AmountPayable": "SELECT * FROM public.purchase_view WHERE file_status = 'true' AND COALESCE(material_status, '') IN ('received', 'delivered', 'pending') {UserFilter} ORDER BY amount DESC",
+        "PoCount": "SELECT * FROM public.purchase_view WHERE file_status = 'true' AND COALESCE(material_status, '') IN ('received', 'delivered', 'pending') {UserFilter} ORDER BY id DESC",
+        "GrnDueThisWeek": "SELECT * FROM public.purchase_view WHERE file_status = 'true' AND COALESCE(material_status, '') NOT IN ('received', 'delivered') AND expected_date >= CURRENT_DATE AND expected_date < CURRENT_DATE + INTERVAL '7 days' {UserFilter} ORDER BY expected_date",
+        "GrnOverdue": "SELECT * FROM public.purchase_view WHERE file_status = 'true' AND COALESCE(material_status, '') NOT IN ('received', 'delivered') AND expected_date < CURRENT_DATE {UserFilter} ORDER BY expected_date",
+        "RuleMatched": "SELECT a.rule_name AS rule_name,\n    b.category_name AS category_name,\n    b.last_reminder_sent AS last_reminder_sent,\n    b.id AS id,\n    (CASE WHEN b.category_name = 'Finance' THEN split_part(b.natural_key, '|', 1)\n          WHEN b.category_name = 'Purchase' THEN split_part(b.natural_key, '|', 2) END) AS client_name,\n    (CASE WHEN b.category_name = 'Finance' THEN split_part(b.natural_key, '|', 2)\n          WHEN b.category_name = 'Purchase' THEN split_part(b.natural_key, '|', 4) END) AS client_phone,\n    (CASE WHEN b.category_name = 'Finance' THEN split_part(b.natural_key, '|', 3) END) AS client_email,\n    (CASE WHEN b.category_name = 'Finance' THEN split_part(b.natural_key, '|', 4)\n          WHEN b.category_name = 'Purchase' THEN split_part(b.natural_key, '|', 1) END) AS order_number\nFROM automation_records b\nINNER JOIN rule_alert_configuration a ON a.id = b.matchingruleid\nWHERE a.rule_name = @RuleName\n  AND b.file_status = 'true'\n  AND a.category_name IN ('Finance', 'Purchase')\n  {UserFilter}\nORDER BY b.last_reminder_sent DESC NULLS LAST"
+      },
+      "Insights": {
+        "BucketCase": "CASE\n    WHEN day_overdue BETWEEN 1 AND 30 THEN '0-30'\n    WHEN day_overdue BETWEEN 31 AND 60 THEN '31-60'\n    WHEN day_overdue BETWEEN 61 AND 90 THEN '61-90'\n    ELSE '90+'\nEND",
+        "PausedCount": "SELECT COUNT(*) FROM {ViewName}\nWHERE pause_reminders = true {WhereAnd}",
+        "RecentReplies": "SELECT m.channel, m.from_phone, m.from_email, m.body_text, m.received_at\nFROM inbound_messages m\nJOIN {ViewName} v ON v.id = m.matched_record_id\nWHERE m.processing_status = 'matched' AND m.is_auto_reply = false {WhereAnd}\nORDER BY m.received_at DESC\nLIMIT 5",
+        "RepliesThisMonth": "SELECT COUNT(*)\nFROM inbound_messages m\nJOIN {ViewName} v ON v.id = m.matched_record_id\nWHERE m.processing_status = 'matched' AND m.is_auto_reply = false\n  AND m.received_at >= date_trunc('month', CURRENT_DATE) {WhereAnd}",
+        "Finance": {
+          "AgingBuckets": "SELECT {BucketCase} AS bucket, MIN(day_overdue) AS sort_key, COUNT(*) AS count,\n       COALESCE(SUM(outstanding_amountcal::numeric), 0) AS amount\nFROM {ViewName}\nWHERE COALESCE(day_overdue, 0) > 0 {WhereAnd}\nGROUP BY 1\nORDER BY sort_key",
+          "TopEntities": "SELECT client_name AS name,\n       COUNT(*) || ' invoice' || CASE WHEN COUNT(*) = 1 THEN '' ELSE 's' END AS detail,\n       SUM(outstanding_amountcal::numeric) AS metric\nFROM {ViewName}\nWHERE COALESCE(day_overdue, 0) > 0 {WhereAnd}\nGROUP BY client_name\nORDER BY metric DESC\nLIMIT 10",
+          "StatusBreakdown": "SELECT COALESCE(payment_status, 'unknown') AS status, COUNT(*) AS count\nFROM {ViewName}\n{WhereOnly}\nGROUP BY payment_status\nORDER BY count DESC",
+          "RecentlyResolved": "SELECT invoice_number AS reference, client_name AS name, payment_date AS resolved_at\nFROM {ViewName}\nWHERE payment_status = 'paid' AND payment_date IS NOT NULL {WhereAnd}\nORDER BY payment_date DESC\nLIMIT 5",
+          "ResolvedThisMonth": "SELECT COUNT(*) FROM {ViewName}\nWHERE payment_status = 'paid' AND payment_date >= date_trunc('month', CURRENT_DATE) {WhereAnd}"
+        },
+        "Purchase": {
+          "AgingBuckets": "SELECT {BucketCase} AS bucket, MIN(day_overdue) AS sort_key, COUNT(*) AS count,\n       COALESCE(SUM(amount::numeric), 0) AS amount\nFROM {ViewName}\nWHERE COALESCE(day_overdue, 0) > 0 {WhereAnd}\nGROUP BY 1\nORDER BY sort_key",
+          "TopEntities": "SELECT supplier_name AS name,\n       COUNT(*) || ' order' || CASE WHEN COUNT(*) = 1 THEN '' ELSE 's' END AS detail,\n       SUM(amount::numeric) AS metric\nFROM {ViewName}\nWHERE COALESCE(day_overdue, 0) > 0 {WhereAnd}\nGROUP BY supplier_name\nORDER BY metric DESC\nLIMIT 10",
+          "StatusBreakdown": "SELECT COALESCE(material_status, 'unknown') AS status, COUNT(*) AS count\nFROM {ViewName}\n{WhereOnly}\nGROUP BY material_status\nORDER BY count DESC",
+          "RecentlyResolved": "SELECT purchase_id AS reference, supplier_name AS name, delivery_date AS resolved_at\nFROM {ViewName}\nWHERE material_status IN ('received', 'delivered') AND delivery_date IS NOT NULL {WhereAnd}\nORDER BY delivery_date DESC\nLIMIT 5",
+          "ResolvedThisMonth": "SELECT COUNT(*) FROM {ViewName}\nWHERE material_status IN ('received', 'delivered') AND delivery_date >= date_trunc('month', CURRENT_DATE) {WhereAnd}"
+        },
+        "Inventory": {
+          "TopEntities": "SELECT item_name AS name,\n       (current_stock::text || ' / ' || reorder_point::text || ' reorder pt') AS detail,\n       (reorder_point::numeric - current_stock::numeric) AS metric\nFROM {ViewName}\nWHERE stock_status IN ('out', 'low') {WhereAnd}\nORDER BY metric DESC\nLIMIT 10",
+          "StatusBreakdown": "SELECT COALESCE(stock_status, 'unknown') AS status, COUNT(*) AS count\nFROM {ViewName}\n{WhereOnly}\nGROUP BY stock_status\nORDER BY count DESC",
+          "RecentlyResolved": "SELECT item_code AS reference, item_name AS name, last_reminder_sent AS resolved_at\nFROM {ViewName}\nWHERE stock_status = 'ok' AND last_reminder_sent IS NOT NULL {WhereAnd}\nORDER BY last_reminder_sent DESC\nLIMIT 5",
+          "ResolvedThisMonth": "SELECT COUNT(*) FROM {ViewName}\nWHERE stock_status = 'ok' AND last_reminder_sent >= date_trunc('month', CURRENT_DATE) {WhereAnd}"
+        },
+        "Dispatch": {
+          "AgingBuckets": "SELECT {BucketCase} AS bucket, MIN(day_overdue) AS sort_key, COUNT(*) AS count, NULL::numeric AS amount\nFROM {ViewName}\nWHERE COALESCE(day_overdue, 0) > 0 {WhereAnd}\nGROUP BY 1\nORDER BY sort_key",
+          "TopEntities": "SELECT dispatch_order_no AS name, item_name AS detail, day_overdue AS metric\nFROM {ViewName}\nWHERE COALESCE(day_overdue, 0) > 0 {WhereAnd}\nORDER BY day_overdue DESC\nLIMIT 10",
+          "StatusBreakdown": "SELECT COALESCE(dispatch_status, 'unknown') AS status, COUNT(*) AS count\nFROM {ViewName}\n{WhereOnly}\nGROUP BY dispatch_status\nORDER BY count DESC",
+          "RecentlyResolved": "SELECT dispatch_order_no AS reference, item_name AS name, delivery_date AS resolved_at\nFROM {ViewName}\nWHERE dispatch_status = 'delivered' AND delivery_date IS NOT NULL {WhereAnd}\nORDER BY delivery_date DESC\nLIMIT 5",
+          "ResolvedThisMonth": "SELECT COUNT(*) FROM {ViewName}\nWHERE dispatch_status = 'delivered' AND delivery_date >= date_trunc('month', CURRENT_DATE) {WhereAnd}"
+        },
+        "Production": {
+          "AgingBuckets": "SELECT {BucketCase} AS bucket, MIN(day_overdue) AS sort_key, COUNT(*) AS count, NULL::numeric AS amount\nFROM {ViewName}\nWHERE COALESCE(day_overdue, 0) > 0 {WhereAnd}\nGROUP BY 1\nORDER BY sort_key",
+          "TopEntities": "SELECT production_order_no AS name, item_name AS detail, day_overdue AS metric\nFROM {ViewName}\nWHERE COALESCE(day_overdue, 0) > 0 {WhereAnd}\nORDER BY day_overdue DESC\nLIMIT 10",
+          "StatusBreakdown": "SELECT COALESCE(production_status, 'unknown') AS status, COUNT(*) AS count\nFROM {ViewName}\n{WhereOnly}\nGROUP BY production_status\nORDER BY count DESC",
+          "RecentlyResolved": "SELECT production_order_no AS reference, item_name AS name, actual_completion_date AS resolved_at\nFROM {ViewName}\nWHERE production_status = 'completed' AND actual_completion_date IS NOT NULL {WhereAnd}\nORDER BY actual_completion_date DESC\nLIMIT 5",
+          "ResolvedThisMonth": "SELECT COUNT(*) FROM {ViewName}\nWHERE production_status = 'completed' AND actual_completion_date >= date_trunc('month', CURRENT_DATE) {WhereAnd}"
+        }
+      }
+    },
+
+    "Inquiry": {
+      "GetAll": "SELECT * FROM {ViewName} order by 1 desc",
+      "GetByUser": "SELECT * FROM {ViewName} WHERE userid = @UserId order by 1 desc",
+      "GetById": "SELECT * FROM {ViewName} WHERE id = @Id",
+      "UpdateFileStatus": "SELECT update_automation_record_file_status(@p_id, @p_status, @p_userid, @p_is_superadmin)",
+      "UpdateFinance": "SELECT update_finance_record(@p_id, @p_client_priority, @p_invoice_amount, @p_invoice_date, @p_credit_days, @p_payment_status, @p_paid_amount, @p_payment_date, @p_remaining_days_payment, @p_pause_reminders, @p_userid, @p_is_superadmin)",
+      "UpdateInventory": "SELECT update_inventory_record(@p_id, @p_item_name, @p_current_stock, @p_reorder_point, @p_stock_status, @p_warehouse_location, @p_procurement_email, @p_procurement_phone, @p_pause_reminders, @p_userid, @p_is_superadmin)",
+      "UpdateDispatch": "SELECT update_dispatch_record(@p_id, @p_dispatch_type, @p_item_name, @p_quantity, @p_dispatch_status, @p_planned_dispatch_date, @p_actual_dispatch_date, @p_delivery_date, @p_customer_email, @p_customer_phone, @p_logistics_email, @p_logistics_phone, @p_pause_reminders, @p_userid, @p_is_superadmin)",
+      "UpdatePurchase": "SELECT update_purchase_record(@p_id, @p_expected_days, @p_material_status, @p_item_description, @p_quantity, @p_unit_price, @p_order_date, @p_expected_date, @p_delivery_date, @p_pause_reminders, @p_userid, @p_is_superadmin)",
+      "UpdateProduction": "SELECT update_production_record(@p_id, @p_item_name, @p_quantity, @p_production_type, @p_production_status, @p_planned_start_date, @p_planned_completion_date, @p_actual_start_date, @p_actual_completion_date, @p_supervisor_email, @p_supervisor_phone, @p_vendor_email, @p_vendor_phone, @p_pause_reminders, @p_userid, @p_is_superadmin)",
+      "Updateautomationrecordlogic": "CALL update_automation_record_logic(p_id => @p_id,p_category=> @p_category, status => NULL)"
+    },
+
+    "Configuration": {
+      "UpdateRuleAlertConfig": "SELECT update_rule_alert_config(@p_id, @p_whatsapp_message_body_template)",
+      "UpdateEmailTemplateConfig": "SELECT update_email_template_config(@p_id, @p_subject_template, @p_body_template)"
+    },
+
+    "User": {
+      "GetByUsernameOrEmail": "SELECT * FROM get_user_by_username_or_email(@p_val)",
+      "GetByUserId": "SELECT * FROM get_user_by_id(@p_userid)",
+      "RegisterUserViaFunction": "SELECT register_user(@p_email, @p_phone, @p_username, @p_password, @p_redirecturl, @p_usertypeid, @p_createdby)",
+      "UpdateUserViaFunction": "SELECT update_user(@p_userid, @p_email, @p_phone, @p_username, @p_redirecturl, @p_usertypeid, @p_updatedby)",
+      "ChangePasswordViaFunction": "SELECT change_user_password(@p_username, @p_newpassword, @p_updatedby)",
+      "UpdateAllowedCategories": "UPDATE \"User\" SET allowedcategories = @p_categories WHERE \"UserId\" = @p_userid",
+      "GetAllUsers": "SELECT * FROM \"User\" a ORDER BY a.\"UserId\"",
+      "UpsertDevice": "INSERT INTO user_device\n    (user_id, device_id, push_token, platform, device_model, os_version, app_version, last_login_at, created_at, updated_at)\nVALUES\n    (@p_userid, @p_deviceid, @p_pushtoken, @p_platform, @p_devicemodel, @p_osversion, @p_appversion, now(), now(), now())\nON CONFLICT (user_id, device_id) DO UPDATE SET\n    push_token = EXCLUDED.push_token,\n    platform = EXCLUDED.platform,\n    device_model = EXCLUDED.device_model,\n    os_version = EXCLUDED.os_version,\n    app_version = EXCLUDED.app_version,\n    last_login_at = now(),\n    updated_at = now()"
+    },
+
+    "RecordsExport": {
+      "GetColumns": "SELECT sheet_column_name FROM category_field_mapping WHERE category_name = @Category ORDER BY id ASC",
+      "GetCategories": "SELECT DISTINCT category_name FROM category_field_mapping",
+      "GetMandatoryColumns": "SELECT sheet_column_name FROM category_field_mapping WHERE category_name = @Category AND is_mandatory = true ORDER BY id ASC"
+    },
+
+    "Automation": {
+      "_comment": "Native replacement for the retired n8n 'WF: Daily Refresh Automation Records (5AM)' workflow - see SmartWorker/BackgroundServices/DailyAutomationRefreshService.cs, which runs this on an in-process 5:00 AM IST schedule instead of n8n's Schedule Trigger.",
+      "DailyRefresh": "CALL public.refresh_automation_records_daily(NULL)"
+    },
+
+    "ReplyClassification": {
+      "_comment": "Native replacement for the retired n8n 'WF: Reply Processor (Classify)' workflow's active/published version (Schedule (60 sec)1 -> Fetch Unclassified1 -> Build Prompt1 -> OpenAI Classify1 -> Parse & Validate1 -> Insert Reply Intent1 -> Supersede Older1 -> Notify Approvals (by user)1 -> push chain). See SmartWorker/BackgroundServices/ReplyClassificationBackgroundService.cs. UpsertIntent is the same INSERT ... ON CONFLICT (inbound_message_id) DO UPDATE as n8n's hand-escaped multi-row statement, just parameterized and run once per reply instead of built as one big string. status_id is always 'human_approval' here, matching the currently active workflow exactly - the older fn_route_pending(0.85) auto-apply step exists in the DB but is NOT wired into the active n8n flow, so it's deliberately not called here either.",
+      "FetchUnclassified": "SELECT im.id AS inbound_message_id,\n       im.channel,\n       im.body_text,\n       im.matched_record_id,\n       ar.category_name,\n       ar.natural_key,\n       ar.day_overdue,\n       ar.business_data\nFROM inbound_messages im\nJOIN automation_records ar ON ar.id = im.matched_record_id\nWHERE im.processing_status IN ('matched','ambiguous')\n  AND im.is_auto_reply = false\n  AND NOT EXISTS (\n    SELECT 1 FROM reply_intents ri WHERE ri.inbound_message_id = im.id\n  )\nORDER BY im.received_at ASC\nLIMIT 20",
+      "UpsertIntent": "INSERT INTO reply_intents\n  (inbound_message_id, matched_record_id, intent, promised_date, promised_amount,\n   confidence, llm_model, llm_raw, status_id)\nVALUES\n  (@InboundMessageId, @MatchedRecordId, @Intent, @PromisedDate, @PromisedAmount,\n   @Confidence, @LlmModel, @LlmRaw::jsonb,\n   (SELECT id FROM reply_status WHERE status_name = 'human_approval'))\nON CONFLICT (inbound_message_id) DO UPDATE SET\n   intent = EXCLUDED.intent, promised_date = EXCLUDED.promised_date,\n   promised_amount = EXCLUDED.promised_amount, confidence = EXCLUDED.confidence,\n   llm_model = EXCLUDED.llm_model, llm_raw = EXCLUDED.llm_raw",
+      "SupersedeOlder": "UPDATE reply_intents ri\nSET status_id = (SELECT id FROM reply_status WHERE status_name = 'superseded')\nWHERE ri.status_id = (SELECT id FROM reply_status WHERE status_name = 'human_approval')\n  AND ri.matched_record_id IS NOT NULL\n  AND EXISTS (\n    SELECT 1 FROM reply_intents newer\n    WHERE newer.matched_record_id = ri.matched_record_id\n      AND newer.id > ri.id\n  )",
+      "ClaimAndNotify": "WITH pending AS (\n  SELECT ri.id\n  FROM reply_intents ri\n  JOIN reply_status rs       ON rs.id = ri.status_id\n  JOIN automation_records ar ON ar.id = ri.matched_record_id\n  WHERE rs.status_name = 'human_approval'\n    AND ri.push_notified_at IS NULL\n    AND ar.userid IS NOT NULL\n    AND EXISTS (SELECT 1 FROM user_device d\n                WHERE d.user_id = ar.userid AND d.push_token IS NOT NULL)\n  ORDER BY ri.id\n  FOR UPDATE OF ri SKIP LOCKED\n),\nclaimed AS (\n  UPDATE reply_intents ri\n  SET push_notified_at = now()\n  FROM pending p\n  WHERE ri.id = p.id\n    AND ri.push_notified_at IS NULL\n  RETURNING ri.id, ri.intent, ri.matched_record_id\n)\nSELECT DISTINCT ON (c.id, d.push_token)\n  c.id            AS reply_intent_id,\n  c.intent,\n  ar.userid       AS target_user_id,\n  ar.natural_key  AS record_ref,\n  COALESCE(ar.business_data->>'client_name',\n           ar.business_data->>'supplier_name',\n           ar.business_data->>'item_name',\n           ar.natural_key, 'A customer') AS party_name,\n  d.push_token,\n  d.platform\nFROM claimed c\nJOIN automation_records ar ON ar.id = c.matched_record_id\nJOIN user_device d         ON d.user_id = ar.userid\nWHERE d.push_token IS NOT NULL"
+    },
+
+    "WhatsAppReconcile": {
+      "_comment": "Native replacement for the retired n8n 'WF: Reconcile WhatsApp Status (Schedule)' workflow (Every 2 Minutes -> Reconcile WhatsApp Status). See SmartWorker/BackgroundServices/ReconcileWhatsAppStatusBackgroundService.cs. Same underlying function ReminderSend:Reconcile also calls inline after a send batch - this is the independent periodic safety-net call n8n ran on its own 2-minute schedule.",
+      "Reconcile": "SELECT public.fn_reconcile_whatsapp_status()"
+    },
+
+    "ReminderSend": {
+      "_comment": "Native replacement for the retired n8n 'WF: Reminder Send (Automation) Latest' workflow (Every 1 Minute Trigger -> 2. Fetch Pending -> Loop Records -> ... -> Reconcile WhatsApp Status). See SmartWorker/BackgroundServices/ReminderSendBackgroundService.cs, which runs this same pipeline on an in-process 1-minute loop. FinalizeUpdate/FinalizeInsertLog are the exact same UPDATE automation_records / INSERT notification_log SQL n8n's 'Build Bulk Update Query' node builds (n8n did it as one multi-row VALUES statement per batch; here it's the same statement run once per record, parameterized instead of string-built - functionally identical, process_status is deliberately left untouched exactly as n8n leaves it).",
+      "FetchPending": "SELECT * FROM public.fn_get_pending_automation_notifications()",
+      "ClaimPending": "UPDATE public.automation_records SET last_reminder_sent = now() WHERE id = ANY(@Ids)",
+      "FinalizeUpdate": "UPDATE public.automation_records\nSET whatsapp_status = @WhatsappStatus,\n    whatsapp_message_id = @WhatsappMessageId,\n    email_status = @EmailStatus,\n    email_message_id = @EmailMessageId,\n    email_thread_id = @EmailThreadId,\n    last_rule_sent = @RuleName,\n    send_status_updated_at = now(),\n    last_reminder_sent = now(),\n    reminder_count = COALESCE(reminder_count, 0) + 1\nWHERE id = @Id",
+      "FinalizeInsertLog": "INSERT INTO notification_log (\n  record_id, matchingruleid, skip_days, last_rule_sent, last_reminder_sent,\n  due_date, day_overdue, pause_reminders,\n  category_name, natural_key, invoice_ref, rule_name,\n  email_recipient, email_subject, email_body, email_status, email_message_id,\n  whatsapp_recipient, whatsapp_body, whatsapp_status, whatsapp_message_id\n)\nSELECT\n  ar.id, ar.matchingruleid, ar.skip_days, ar.last_rule_sent, ar.last_reminder_sent,\n  ar.due_date, ar.day_overdue, ar.pause_reminders,\n  @CategoryName, ar.natural_key,\n  COALESCE(ar.business_data->>'invoice_number', ar.business_data->>'purchase_id',\n           ar.business_data->>'production_order_no', ar.business_data->>'dispatch_order_no',\n           ar.business_data->>'item_code'),\n  @RuleName,\n  CASE WHEN @EmailEnabled THEN @ClientEmail END,\n  CASE WHEN @EmailEnabled THEN @EmailSubject END,\n  CASE WHEN @EmailEnabled THEN @EmailBody END,\n  CASE WHEN @EmailEnabled THEN ar.email_status END,\n  CASE WHEN @EmailEnabled THEN ar.email_message_id END,\n  CASE WHEN @WhatsappEnabled THEN @ClientPhone END,\n  CASE WHEN @WhatsappEnabled THEN @WhatsappBody END,\n  CASE WHEN @WhatsappEnabled THEN ar.whatsapp_status END,\n  CASE WHEN @WhatsappEnabled THEN ar.whatsapp_message_id END\nFROM automation_records ar\nWHERE ar.id = @Id",
+      "Reconcile": "SELECT public.fn_reconcile_whatsapp_status()"
+    },
+
+    "Notifications": {
+      "GetPendingById": "SELECT * FROM public.fn_get_automation_notification_by_id(@Id)",
+      "CaptureSend": "CALL public.sp_capture_automation_notification_send(@Id, @WhatsappStatus, @WhatsappMessageId, @EmailStatus, @EmailMessageId, @EmailThreadId, NULL)",
+      "BlockedWhatsAppNumbers": "SELECT recipient AS \"Recipient\", status AS \"Status\", error_code AS \"ErrorCode\", event_ts AS \"EventTs\", received_at AS \"ReceivedAt\"\nFROM (\n    SELECT DISTINCT ON (recipient)\n        recipient, status, error_code, event_ts, received_at\n    FROM whatsapp_status_events\n    ORDER BY recipient, event_ts DESC, received_at DESC\n) latest\nWHERE status = 'failed'\n  AND NOT EXISTS (\n      SELECT 1 FROM inbound_messages m\n      WHERE m.from_phone IS NOT NULL\n        AND regexp_replace(m.from_phone, '\\D', '', 'g') = regexp_replace(latest.recipient, '\\D', '', 'g')\n        AND m.received_at > latest.event_ts\n  )\nORDER BY event_ts DESC"
+    },
+
+    "Ingestion": {
+      "_comment": "Native replacement for the n8n 'Generic Ingestion (All Categories) webhook' - same stored procedures, same call shapes, just invoked from the API instead of an n8n HTTP forward. See FileIngestionService.",
+      "GetCategoryMapping": "SELECT DISTINCT category_name AS \"CategoryName\", sheet_name AS \"SheetName\" FROM category_field_mapping ORDER BY category_name",
+      "InsertFileTracking": "INSERT INTO file_tracking (file_name, created_date, file_status, status, userid) VALUES (@FileName, @CreatedDate, 'true', 'new', @UserId) RETURNING id",
+      "BulkInsertStaging": "CALL bulk_insert_automation_staging_ui(@FileId::character varying, @Payload::jsonb, @SubmittedBy::integer)",
+      "MarkDuplicates": "WITH dups AS (\n  SELECT id, category_name, row_number,\n         ROW_NUMBER() OVER (PARTITION BY category_name, natural_key ORDER BY id) AS rn\n  FROM automation_staging\n)\nUPDATE automation_staging a\nSET ingest_status = 'duplicate'\nFROM dups d\nWHERE a.id = d.id AND d.rn > 1\n  AND a.file_id = @FileId::character varying",
+      "MarkFileCompleted": "UPDATE file_tracking SET updateddatetime = NOW(), status = 'completed' WHERE id = @FileId",
+      "SyncStaging": "CALL sync_automation_records_all_flows(p_userid => @UserId,p_fileid=> @FileId, status => NULL)",
+      "RecalculateOverdue": "CALL update_automation_overdue(status => NULL)",
+
+      "_reviewComment": "Staging review gate (StagingReviewService) - runs after BulkInsertStaging/MarkDuplicates, before SyncStaging. Classifies every staged row as new/already_exist/mandatory_field/duplicate/dataissue so the user can download an Excel report and confirm before anything is promoted to automation_records.",
+      "GetMandatoryColumns": "SELECT category_name AS \"CategoryName\", sheet_column_name AS \"ColumnName\" FROM category_field_mapping WHERE is_mandatory = true",
+      "GetStagingRowsForFile": "SELECT id, category_name AS \"CategoryName\", natural_key AS \"NaturalKey\", row_number AS \"RowNumber\", business_data::text AS \"BusinessDataJson\", ingest_status AS \"IngestStatus\" FROM automation_staging WHERE file_id = @FileId AND userid = @UserId ORDER BY category_name, row_number",
+      "CountStagingForFile": "SELECT COUNT(*) FROM automation_staging WHERE file_id = @FileId AND userid = @UserId",
+      "GetExistingNaturalKeys": "SELECT DISTINCT category_name AS \"CategoryName\", natural_key AS \"NaturalKey\" FROM automation_records WHERE category_name = ANY(@Categories::text[])",
+      "UpdateStagingRowStatus": "UPDATE automation_staging SET ingest_status = @Status WHERE id = @Id",
+      "DeleteNonPromotableStaging": "DELETE FROM automation_staging WHERE file_id = @FileId AND userid = @UserId AND ingest_status NOT IN ('new','already_exist')"
+    },
+
+    "GenericRepository": {
+      "GetById": "SELECT * FROM \"{TableName}\" WHERE \"Id\" = @Id",
+      "GetAll": "SELECT * FROM \"{TableName}\"",
+      "InsertReturningId": "INSERT INTO \"{TableName}\" ({ColumnNames}) VALUES ({ParameterNames}) RETURNING \"Id\"",
+      "InsertNonReturning": "INSERT INTO \"{TableName}\" ({ColumnNames}) VALUES ({ParameterNames})",
+      "Update": "UPDATE \"{TableName}\" SET {UpdateFields} WHERE \"Id\" = @Id",
+      "Delete": "DELETE FROM \"{TableName}\" WHERE \"Id\" = @Id"
+    }
+  }
+}

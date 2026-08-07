@@ -1,0 +1,6 @@
+@SmartWorkerAutomation.API_HostAddress = http://localhost:5011
+
+GET {{SmartWorkerAutomation.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
