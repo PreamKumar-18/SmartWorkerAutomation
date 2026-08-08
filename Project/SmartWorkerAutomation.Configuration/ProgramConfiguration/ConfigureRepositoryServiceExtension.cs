@@ -25,11 +25,7 @@ public static class ConfigureRepositoryServiceExtension
         services.AddHttpContextAccessor();
         services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
         services.AddSingleton<ILogServices, LogServices>();
-        services.AddSingleton<IUserContextServices, UserContextServices>();
-        services.AddSingleton<SmartWorkerAutomation.Core.Interface.ICurrentUserService, UserContextServices>();
-        services.AddScoped<IUserServices, UserServices>();
-
-        services.AddScoped<IRoleServices, RoleServices>();
+      
 
 
         services.AddSingleton<DbConnectionFactory>();
