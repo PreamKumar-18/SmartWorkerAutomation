@@ -1,12 +1,26 @@
 services:
   smartworker-api:
     build:
-      context: .
-      dockerfile: SmartWorker/Dockerfile
+      # context: .. (repo root, one level up from this Solution/ folder) -
+      # was `context: .` + `dockerfile: SmartWorker/Dockerfile`, a path that
+      # hasn't existed since the SmartWorker -> SmartWorkerAutomation rename
+      # (confirmed: no SmartWorker/ folder anywhere in this repo). The
+      # actual project lives at Project/SmartWorkerAutomation.API - context
+      # needs to reach that far up so the Dockerfile can COPY every project
+      # under Project/, not just the API one.
+      context: ..
+      dockerfile: Project/SmartWorkerAutomation.API/Dockerfile
     container_name: smartworker-api
     ports:
       - "8082:8080"   # kept for direct/debug access - Traefik below is the real public path
     restart: unless-stopped
+    volumes:
+      # Without this, Serilog's File sink writes into the container's own
+      # writable layer (COPY . . only happens once, at build time) - logs
+      # never show up in ~/api/wwwroot on the host and are lost on every
+      # `docker compose build`. This mounts the host folder straight through
+      # so log files persist and are visible from the host.
+      - ./wwwroot/SmartWorkerAutomationLogs:/app/wwwroot/SmartWorkerAutomationLogs
     networks:
       - default
       - traefik_net
@@ -17,6 +31,15 @@ services:
       - traefik.http.routers.smartworker-api.entrypoints=web,websecure
       - traefik.http.routers.smartworker-api.tls.certresolver=mytlschallenge
       - traefik.http.services.smartworker-api.loadbalancer.server.port=8080
+      # Required because this container is attached to two networks
+      # (default/api_default AND traefik_net) - confirmed live via
+      # `docker inspect`. Without this, Traefik's docker provider can't
+      # unambiguously determine which of the container's networks to
+      # actually route through, which is what was producing "Gateway
+      # Timeout": the router existed and labels looked right, but Traefik
+      # was very likely trying to reach the container over api_default (a
+      # network Traefik itself isn't attached to) instead of traefik_net.
+      - traefik.docker.network=traefik_net
 
 networks:
   traefik_net:

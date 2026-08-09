@@ -68,6 +68,15 @@ public static class RecordFieldTypes
             ("order_date", "date"),
             ("expected_date", "date"),
             ("delivery_date", "date"),
+            // grn_date - see Database/add_purchase_grn_date.sql. Must be
+            // deployed together with that migration and the matching
+            // @p_grn_date addition to Config/Queries.json's "UpdatePurchase"
+            // entry - this array drives which p_xxx parameters get built for
+            // the update_purchase_record() call, so it has to match that
+            // function's actual argument list exactly (both in presence and
+            // position) or the call fails outright for every Purchase edit,
+            // not just this field.
+            ("grn_date", "date"),
             ("pause_reminders", "bool"),
         },
         ["production"] = new[]

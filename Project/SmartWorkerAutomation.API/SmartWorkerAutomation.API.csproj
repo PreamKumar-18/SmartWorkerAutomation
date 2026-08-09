@@ -22,4 +22,10 @@
     <ProjectReference Include="..\SmartWorkerAutomation.Configuration\SmartWorkerAutomation.Configuration.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Dockerfile">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
