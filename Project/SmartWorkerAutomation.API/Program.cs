@@ -31,6 +31,11 @@ public class Program
             .MinimumLevel.Error()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Fatal)
             .MinimumLevel.Override("System", LogEventLevel.Fatal)
+            // Root is Error-only by design - only failures get logged,
+            // no per-cycle/per-message informational noise. The temporary
+            // per-service Information override used while debugging inbound
+            // email capture has been removed now that
+            // InboundEmailBackgroundService no longer emits LogInformation.
             .Enrich.WithProperty("Application", "SmartWorkerAutomationAPI")
             .WriteTo.File(
                 Path.Combine(logDirectory, "SmartWorkerAutomationLogs-.txt"),

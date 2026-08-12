@@ -21,4 +21,21 @@ public interface IInquiryService
     /// or null if no row matched (wrong id, or not this user's record).
     /// </summary>
     Task<dynamic?> UpdateRecordAsync(string category, int id, Dictionary<string, JsonElement> changes, string userIdClaim, bool isSuperAdmin);
+
+    /// <summary>
+    /// Quick single-field status action for the Records table/list row -
+    /// Finance "Mark as paid" (unpaid -> paid) and Purchase "Mark delivered" /
+    /// "Mark received" (pending -> delivered -> received). Unlike
+    /// UpdateRecordAsync, this never touches any other business_data field,
+    /// so it's safe to call directly from a table row action without first
+    /// loading the full record into an edit form. Only the categories in
+    /// StatusUpdateQueryByCategory support this - anything else throws
+    /// ArgumentException. The DB function itself re-validates the current
+    /// status server-side (never trusts the client's idea of "current
+    /// status") and throws if the requested transition isn't the single
+    /// allowed next step, which surfaces here as ArgumentException too.
+    /// Returns the freshly-updated row, or null if no row matched (wrong id,
+    /// or not this user's record).
+    /// </summary>
+    Task<dynamic?> UpdateRecordStatusAsync(string category, int id, string newStatus, string userIdClaim, bool isSuperAdmin);
 }

@@ -1,4 +1,5 @@
 using Dapper;
+using Microsoft.Extensions.Configuration;
 using SmartWorkerAutomation.Core.Repository.Automation;
 
 namespace SmartWorkerAutomation.API.BackgroundServices;
@@ -13,33 +14,67 @@ namespace SmartWorkerAutomation.API.BackgroundServices;
 /// .NET BackgroundService instead of an n8n Schedule Trigger calling into
 /// the API.
 ///
-/// Every day at 5:00 AM IST (Asia/Kolkata) it runs
-/// Config/Queries.json's Automation:DailyRefresh
-/// ("CALL public.refresh_automation_records_daily(NULL)") once, then sleeps
-/// until the next 5:00 AM IST. IST is resolved defensively - Linux/Docker
-/// images don't always ship the IANA tzdata package - by trying the IANA id
-/// first, then the Windows id, then finally falling back to a fixed
-/// UTC+5:30 offset (India doesn't observe DST, so a fixed offset is exactly
-/// correct even without a real tzdata entry).
+/// By default it runs at 5:00 AM IST (Asia/Kolkata), but the time of day is
+/// configurable via appsettings' Automation:DailyRefreshTimeIst
+/// ("HH:mm:ss", always interpreted in IST) - falls back to 05:00:00 if
+/// missing or unparsable. It runs Config/Queries.json's
+/// Automation:DailyRefresh ("CALL public.refresh_automation_records_daily(NULL)")
+/// once, then sleeps until the next occurrence of that time. IST is resolved
+/// defensively - Linux/Docker images don't always ship the IANA tzdata
+/// package - by trying the IANA id first, then the Windows id, then finally
+/// falling back to a fixed UTC+5:30 offset (India doesn't observe DST, so a
+/// fixed offset is exactly correct even without a real tzdata entry).
 /// </summary>
 public class DailyAutomationRefreshService : BackgroundService
 {
-    private static readonly TimeSpan RunTimeOfDayIst = new(5, 0, 0);
+    private static readonly TimeSpan DefaultRunTimeOfDayIst = new(5, 0, 0);
 
     private readonly DbConnectionFactory _connectionFactory;
     private readonly IQueryStore _queryStore;
     private readonly ILogger<DailyAutomationRefreshService> _logger;
     private readonly TimeZoneInfo _istZone;
+    private readonly TimeSpan _runTimeOfDayIst;
 
     public DailyAutomationRefreshService(
         DbConnectionFactory connectionFactory,
         IQueryStore queryStore,
+        IConfiguration configuration,
         ILogger<DailyAutomationRefreshService> logger)
     {
         _connectionFactory = connectionFactory;
         _queryStore = queryStore;
         _logger = logger;
         _istZone = ResolveIndiaTimeZone(logger);
+        _runTimeOfDayIst = ResolveRunTimeOfDay(configuration, logger);
+    }
+
+    /// <summary>
+    /// Reads Automation:DailyRefreshTimeIst ("HH:mm:ss") from config - a
+    /// plain TimeSpan.TryParse accepts that format directly. Falls back to
+    /// 05:00:00 (logged as a warning, not an error - a missing/blank value
+    /// is the expected state until someone opts into overriding it) if the
+    /// key is absent, blank, or not parseable, or if it resolves to
+    /// something outside a single day (negative or >= 24h makes no sense
+    /// for "time of day").
+    /// </summary>
+    private static TimeSpan ResolveRunTimeOfDay(IConfiguration configuration, ILogger logger)
+    {
+        var configured = configuration["Automation:DailyRefreshTimeIst"];
+        if (string.IsNullOrWhiteSpace(configured))
+        {
+            return DefaultRunTimeOfDayIst;
+        }
+
+        if (TimeSpan.TryParse(configured, out var parsed) && parsed >= TimeSpan.Zero && parsed < TimeSpan.FromDays(1))
+        {
+            return parsed;
+        }
+
+        logger.LogWarning(
+            "Automation:DailyRefreshTimeIst value '{Configured}' is not a valid time of day (expected HH:mm:ss) - falling back to the default {Default}.",
+            configured,
+            DefaultRunTimeOfDayIst);
+        return DefaultRunTimeOfDayIst;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -90,13 +125,14 @@ public class DailyAutomationRefreshService : BackgroundService
 
     /// <summary>
     /// How long to sleep from <paramref name="nowUtc"/> until the next
-    /// 5:00 AM IST. If it's already past 5:00 AM IST today, targets
-    /// tomorrow's 5:00 AM IST instead.
+    /// occurrence of the configured run time (Automation:DailyRefreshTimeIst,
+    /// default 5:00 AM IST). If it's already past that time today, targets
+    /// tomorrow's occurrence instead.
     /// </summary>
     internal TimeSpan GetDelayUntilNextRun(DateTimeOffset nowUtc)
     {
         var nowIst = TimeZoneInfo.ConvertTime(nowUtc, _istZone);
-        var todayRunIst = new DateTimeOffset(nowIst.Date, nowIst.Offset).Add(RunTimeOfDayIst);
+        var todayRunIst = new DateTimeOffset(nowIst.Date, nowIst.Offset).Add(_runTimeOfDayIst);
         var nextRunIst = nowIst < todayRunIst ? todayRunIst : todayRunIst.AddDays(1);
         return nextRunIst - nowIst;
     }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Dapper;
+using Npgsql;
 using SmartWorkerAutomation.Core.Repository.Automation;
 
 namespace SmartWorkerAutomation.DataProvider.Automation;
@@ -45,6 +46,22 @@ public class InquiryService : IInquiryService
     private static readonly HashSet<string> GlobalCategories = new(StringComparer.OrdinalIgnoreCase)
     {
         "ruleconfiguration"
+    };
+
+    /// <summary>
+    /// Categories that support the quick single-field status action, and
+    /// which Queries.json entry backs each one. See
+    /// Database/add_status_quick_actions.sql for the underlying
+    /// update_finance_payment_status/update_purchase_material_status
+    /// functions - each one hardcodes its own single allowed forward
+    /// transition (or transition pair, for Purchase), so p_status here is
+    /// really just "the transition to attempt," validated against the
+    /// record's actual current status inside the function itself.
+    /// </summary>
+    private static readonly Dictionary<string, string> StatusUpdateQueryByCategory = new(StringComparer.OrdinalIgnoreCase)
+    {
+        { "finance", "Inquiry:UpdateFinancePaymentStatus" },
+        { "purchase", "Inquiry:UpdatePurchaseMaterialStatus" },
     };
 
     /// <summary>
@@ -172,6 +189,71 @@ public class InquiryService : IInquiryService
         {
             return null;
         }
+        await connection.ExecuteAsync(_queryStore.Get("Inquiry:Updateautomationrecordlogic"), new { p_id = id, p_category = Capitalize(normalizedCategory) });
+        var fetchSql = _queryStore.Render("Inquiry:GetById", new Dictionary<string, string> { ["ViewName"] = viewName });
+        return await connection.QuerySingleOrDefaultAsync(fetchSql, new { Id = id });
+    }
+
+    public async Task<dynamic?> UpdateRecordStatusAsync(string category, int id, string newStatus, string userIdClaim, bool isSuperAdmin)
+    {
+        if (string.IsNullOrWhiteSpace(category))
+        {
+            throw new ArgumentException("Category is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(newStatus))
+        {
+            throw new ArgumentException("Status is required.");
+        }
+
+        var normalizedCategory = category.Trim().ToLowerInvariant();
+
+        if (!StatusUpdateQueryByCategory.TryGetValue(normalizedCategory, out var queryKey))
+        {
+            throw new ArgumentException($"Category '{category}' does not support status actions.");
+        }
+
+        if (!CategoryToViewMap.TryGetValue(normalizedCategory, out var viewName))
+        {
+            throw new ArgumentException($"Invalid category: '{category}'.");
+        }
+
+        int userId = 0;
+        if (!isSuperAdmin)
+        {
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out userId))
+            {
+                throw new UnauthorizedAccessException("Invalid user ID in token.");
+            }
+        }
+
+        using var connection = _connectionFactory.CreateConnection();
+
+        bool updated;
+        try
+        {
+            updated = await connection.ExecuteScalarAsync<bool>(_queryStore.Get(queryKey), new
+            {
+                p_id = id,
+                p_status = newStatus.Trim(),
+                p_userid = userId,
+                p_is_superadmin = isSuperAdmin
+            });
+        }
+        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.RaiseException)
+        {
+            // RAISE EXCEPTION from update_finance_payment_status /
+            // update_purchase_material_status - invalid target status, or
+            // the record's current status doesn't allow this transition.
+            // Surface as a 400, not a 500.
+            throw new ArgumentException(ex.MessageText);
+        }
+
+        if (!updated)
+        {
+            return null;
+        }
+
         await connection.ExecuteAsync(_queryStore.Get("Inquiry:Updateautomationrecordlogic"), new { p_id = id, p_category = Capitalize(normalizedCategory) });
         var fetchSql = _queryStore.Render("Inquiry:GetById", new Dictionary<string, string> { ["ViewName"] = viewName });
         return await connection.QuerySingleOrDefaultAsync(fetchSql, new { Id = id });

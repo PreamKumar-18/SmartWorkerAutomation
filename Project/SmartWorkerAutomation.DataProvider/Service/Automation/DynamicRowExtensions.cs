@@ -29,6 +29,11 @@ public static class DynamicRowExtensions
     public static bool GetBool(this IDictionary<string, object> fields, string key)
         => fields.TryGetValue(key, out var value) && value is bool flag && flag;
 
+    public static int GetInt(this IDictionary<string, object> fields, string key)
+        => fields.TryGetValue(key, out var value) && value is not null && value != DBNull.Value
+            ? Convert.ToInt32(value)
+            : 0;
+
     public static JsonElement? GetJsonElement(this IDictionary<string, object> fields, string key)
     {
         if (!fields.TryGetValue(key, out var value) || value is null || value == DBNull.Value)

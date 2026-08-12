@@ -43,25 +43,34 @@ namespace SmartWorkerAutomation.API.BackgroundServices;
 ///     token fetched per cycle (not per push, unlike n8n which re-signs
 ///     per item), then one FCM send per (reply_intent, device) row.
 ///     Best-effort per push, matching n8n's onError: continueRegularOutput.
+///
+/// Configured via appsettings "Automation:ReplyClassification" (see
+/// appsettings.json) - Enabled (default false - stopped) and
+/// PollIntervalSeconds (default 60). Both are re-read every cycle
+/// (appsettings.json reloads on change by default), so flipping Enabled or
+/// changing the interval takes effect on the next cycle without a restart.
 /// </summary>
 public class ReplyClassificationBackgroundService : BackgroundService
 {
-    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan DefaultPollInterval = TimeSpan.FromSeconds(60);
 
     private readonly DbConnectionFactory _connectionFactory;
     private readonly IQueryStore _queryStore;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<ReplyClassificationBackgroundService> _logger;
 
     public ReplyClassificationBackgroundService(
         DbConnectionFactory connectionFactory,
         IQueryStore queryStore,
         IServiceScopeFactory scopeFactory,
+        IConfiguration configuration,
         ILogger<ReplyClassificationBackgroundService> logger)
     {
         _connectionFactory = connectionFactory;
         _queryStore = queryStore;
         _scopeFactory = scopeFactory;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -69,28 +78,40 @@ public class ReplyClassificationBackgroundService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            try
+            if (IsEnabled())
             {
-                await RunPollCycleAsync(stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "WF: Reply Processor (Classify) - poll cycle failed; will retry next cycle.");
+                try
+                {
+                    await RunPollCycleAsync(stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "WF: Reply Processor (Classify) - poll cycle failed; will retry next cycle.");
+                }
             }
 
             try
             {
-                await Task.Delay(PollInterval, stoppingToken);
+                await Task.Delay(GetPollInterval(), stoppingToken);
             }
             catch (OperationCanceledException)
             {
                 break;
             }
         }
+    }
+
+    private bool IsEnabled()
+        => _configuration.GetValue<bool?>("Automation:ReplyClassification:Enabled") ?? false;
+
+    private TimeSpan GetPollInterval()
+    {
+        var seconds = _configuration.GetValue<int?>("Automation:ReplyClassification:PollIntervalSeconds");
+        return seconds is > 0 ? TimeSpan.FromSeconds(seconds.Value) : DefaultPollInterval;
     }
 
     private async Task RunPollCycleAsync(CancellationToken stoppingToken)
