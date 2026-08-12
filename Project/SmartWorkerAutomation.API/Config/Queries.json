@@ -114,7 +114,8 @@
       "UpdateProduction": "SELECT update_production_record(@p_id, @p_item_name, @p_quantity, @p_production_type, @p_production_status, @p_planned_start_date, @p_planned_completion_date, @p_actual_start_date, @p_actual_completion_date, @p_supervisor_email, @p_supervisor_phone, @p_vendor_email, @p_vendor_phone, @p_pause_reminders, @p_userid, @p_is_superadmin)",
       "Updateautomationrecordlogic": "CALL update_automation_record_logic(p_id => @p_id,p_category=> @p_category, status => NULL)",
       "UpdateFinancePaymentStatus": "SELECT update_finance_payment_status(@p_id, @p_status, @p_userid, @p_is_superadmin)",
-      "UpdatePurchaseMaterialStatus": "SELECT update_purchase_material_status(@p_id, @p_status, @p_userid, @p_is_superadmin)"
+      "UpdatePurchaseMaterialStatus": "SELECT update_purchase_material_status(@p_id, @p_status, @p_userid, @p_is_superadmin)",
+      "GetAllWithJoin": "SELECT pv.*,rc.rule_name FROM public.purchase_view pv LEFT JOIN rule_configuration_view rc ON pv.matchingruleid = rc.id;"
     },
 
     "Configuration": {
