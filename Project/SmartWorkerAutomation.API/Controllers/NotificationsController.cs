@@ -98,4 +98,40 @@ public class NotificationsController : ControllerBase
         var result = await _notificationsService.GetBlockedWhatsAppNumbersAsync();
         return Ok(result);
     }
+
+    /// <summary>
+    /// Journey panel's "send custom WhatsApp" compose box - a one-off
+    /// free-text message for one record, independent of the automated
+    /// reminder rules. See INotificationsService.SendCustomWhatsAppAsync.
+    /// </summary>
+    [HttpPost("send-whatsapp-custom")]
+    public async Task<IActionResult> SendCustomWhatsApp([FromBody] SendCustomWhatsAppRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var result = await _notificationsService.SendCustomWhatsAppAsync(
+            request.RecordId, request.Category, request.Phone, request.Message, request.ContactName);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Journey panel's "send custom email" compose box - a one-off email for
+    /// one record, independent of the automated reminder rules. See
+    /// INotificationsService.SendCustomEmailAsync.
+    /// </summary>
+    [HttpPost("send-email-custom")]
+    public async Task<IActionResult> SendCustomEmail([FromBody] SendCustomEmailRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var result = await _notificationsService.SendCustomEmailAsync(
+            request.RecordId, request.Category, request.To, request.Subject, request.Body);
+        return Ok(result);
+    }
 }

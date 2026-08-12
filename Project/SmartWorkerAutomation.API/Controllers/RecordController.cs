@@ -60,4 +60,51 @@ public class RecordController : ControllerBase
             return StatusCode(500, new { message = "An error occurred while processing your request.", details = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Quick status action for a Records table/list row - Finance "Mark as
+    /// paid" and Purchase "Mark delivered" / "Mark received". Only changes
+    /// the one status field (see InquiryService.UpdateRecordStatusAsync);
+    /// use the existing PATCH /api/Inquiry/{id} edit endpoint for full-record
+    /// edits instead. Same REST endpoint backs both the web app and the
+    /// mobile app - no platform-specific backend work needed, only the
+    /// client-side row/card action button.
+    /// </summary>
+    [HttpPost("StatusUpdate")]
+    public async Task<IActionResult> UpdateRecordStatus([FromBody] UpdateRecordStatusRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var userIdClaim = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
+                              ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            bool isSuperAdmin = User.IsInRole("SuperAdmin")
+                                || string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+
+            var updated = await _inquiryService.UpdateRecordStatusAsync(request.Category, request.Id, request.Status, userIdClaim ?? string.Empty, isSuperAdmin);
+            if (updated is null)
+            {
+                return NotFound(new { message = "Record not found or user does not have permission to update it." });
+            }
+
+            return Ok(updated);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while processing your request.", details = ex.Message });
+        }
+    }
 }
