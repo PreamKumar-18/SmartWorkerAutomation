@@ -15,4 +15,9 @@
     <ProjectReference Include="..\SmartWorkerAutomation.Core\SmartWorkerAutomation.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="MasterTransformation\" />
+    <Folder Include="OrganizationTransformation\" />
+  </ItemGroup>
+
 </Project>

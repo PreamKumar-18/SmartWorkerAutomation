@@ -18,7 +18,7 @@ public class TokenService : ITokenService
         _configuration = configuration;
     }
 
-    public string GenerateToken(User user)
+    public string GenerateToken(User user, UserInfo masterUserInfo)
     {
         var jwtSettings = _configuration.GetSection("Jwt");
         var keyVal = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key not configured.");
@@ -34,11 +34,11 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
-            new Claim(ClaimTypes.Role, user.RoleName ?? "User")
+            new Claim(ClaimTypes.Role, masterUserInfo.RoleName),
+            new Claim("accesstype", masterUserInfo.AccessTypeName),
+            new Claim("orgid", masterUserInfo.OrgId.ToString())
         };
 
-        // Category allowlist for 'User'-role accounts. Empty/null means no
-        // restriction (fail-open) - Admin/SuperAdmin never have this set.
         if (user.AllowedCategories is { Length: > 0 })
         {
             claims.Add(new Claim("categories", string.Join(",", user.AllowedCategories)));

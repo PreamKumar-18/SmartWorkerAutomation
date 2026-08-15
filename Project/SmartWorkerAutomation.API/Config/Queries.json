@@ -205,6 +205,19 @@
       "InsertNonReturning": "INSERT INTO \"{TableName}\" ({ColumnNames}) VALUES ({ParameterNames})",
       "Update": "UPDATE \"{TableName}\" SET {UpdateFields} WHERE \"Id\" = @Id",
       "Delete": "DELETE FROM \"{TableName}\" WHERE \"Id\" = @Id"
+    },
+
+    "MasterAuth": {
+      "_comment": "Master/control DB only - organisation, userinfo, organisationinfo. Never run against a tenant SmartWorkerConnection. Aliases are plain lowercase (no quotes needed) - Dapper's default mapping is case-insensitive so orgid binds to OrgId, passwordhash binds to PasswordHash, etc.",
+      "GetUserByEmail": "SELECT u.id, u.orgid, u.username, u.email, u.password_hash AS passwordhash, u.roleid, r.role_name AS rolename, u.accesstype AS accesstypeid, a.access_name AS accesstypename, u.status, u.created_at AS createdat, u.updated_at AS updatedat FROM userinfo u JOIN userrole r ON r.id = u.roleid JOIN useraccesstype a ON a.id = u.accesstype WHERE u.email = @Email AND u.status = true",
+      "GetOrganisationById": "SELECT id, name, company_details AS companydetails, status, created_at AS createdat, updated_at AS updatedat FROM organisation WHERE id = @OrgId AND status = true",
+      "GetOrganisationInfoByOrgId": "SELECT id, orgid, connectionstring, created_at AS createdat, updated_at AS updatedat FROM organisationinfo WHERE orgid = @OrgId",
+      "GetAllActiveTenantConnections": "SELECT oi.orgid AS orgid, oi.connectionstring AS encryptedconnectionstring FROM organisationinfo oi JOIN organisation o ON o.id = oi.orgid WHERE o.status = true",
+      "InsertOrganisation": "INSERT INTO organisation (name, company_details, status) VALUES (@Name, @CompanyDetails::jsonb, true) RETURNING id",
+      "InsertOrganisationInfo": "INSERT INTO organisationinfo (orgid, connectionstring) VALUES (@OrgId, @EncryptedConnectionString) RETURNING id",
+      "InsertUserInfo": "INSERT INTO userinfo (orgid, username, email, password_hash, roleid, accesstype, status) VALUES (@OrgId, @Username, @Email, @PasswordHash, @RoleId, @AccessTypeId, true) RETURNING id",
+      "UpdatePassword": "UPDATE userinfo SET password_hash = @PasswordHash, updated_at = now() WHERE id = @Id",
+      "UpdateEmailAndUsername": "UPDATE userinfo SET email = @Email, username = @Username, updated_at = now() WHERE id = @Id"
     }
   }
 }

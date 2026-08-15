@@ -3,11 +3,14 @@ using DinkToPdf.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using SmartWorkerAutomation.Core.DBContext;
 using SmartWorkerAutomation.Core.Repository.Automation;
+using SmartWorkerAutomation.Core.Security;
 using SmartWorkerAutomation.DataProvider.Automation;
 using SmartWorkerAutomation.DataProvider.Interface;
+using SmartWorkerAutomation.DataProvider.Interface.Automation;
 using SmartWorkerAutomation.DataProvider.Service;
+using SmartWorkerAutomation.DataProvider.Service.Automation;
+
 
 namespace SmartWorkerAutomation.Configuration.ProgramConfiguration;
 
@@ -15,23 +18,27 @@ public static class ConfigureRepositoryServiceExtension
 {
     public static IServiceCollection ConfigureRepositoryService(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContextPool<SmartWorkerAutomationContext>(options =>
-        {
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
-            options.EnableSensitiveDataLogging(false);
-            options.EnableDetailedErrors(false);
-        });
+        //services.AddDbContextPool<SmartWorkerAutomationContext>(options =>
+        //{
+        //    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
+        //    options.EnableSensitiveDataLogging(false);
+        //    options.EnableDetailedErrors(false);
+        //});
 
+
+        services.AddMemoryCache();
         services.AddHttpContextAccessor();
         services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
         services.AddSingleton<ILogServices, LogServices>();
-      
+        services.AddSingleton<ConnectionStringEncryptor>();
 
-
-        services.AddSingleton<DbConnectionFactory>();
+        services.AddSingleton<MasterDbConnectionFactory>();
+        services.AddScoped<DbConnectionFactory>();
         services.AddSingleton<IQueryStore, QueryStore>();
-        services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+        //services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IMasterAuthRepository, MasterAuthRepository>();
+        services.AddScoped<ITenantResolverService, TenantResolverService>();
 
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ITokenService, TokenService>();
@@ -46,6 +53,8 @@ public static class ConfigureRepositoryServiceExtension
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<INotificationsService, NotificationsService>();
         services.AddScoped<IWhatsAppInboundService, WhatsAppInboundService>();
+        //services.AddScoped<ITenantResolverService, TenantResolverService>();
+        services.AddScoped<IOrganisationOnboardingService, OrganisationOnboardingService>();
 
         services.AddHttpClient<N8nIngestionClient>();
         services.AddHttpClient<IWhatsAppService, WhatsAppService>();

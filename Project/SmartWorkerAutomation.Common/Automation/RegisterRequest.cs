@@ -13,4 +13,9 @@ public class RegisterRequest
     /// 'User' role; ignored for Admin/SuperAdmin.
     /// </summary>
     public string[]? AllowedCategories { get; set; }
+
+    public int RoleId { get; set; }
+    public int AccessTypeId { get; set; }
+
+    public int OrgId { get; set; }
 }
