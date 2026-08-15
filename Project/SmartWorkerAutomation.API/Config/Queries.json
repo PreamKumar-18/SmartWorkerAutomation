@@ -119,7 +119,8 @@
       "Updateautomationrecordlogic": "CALL update_automation_record_logic(p_id => @p_id,p_category=> @p_category, status => NULL)",
       "UpdateFinancePaymentStatus": "SELECT update_finance_payment_status(@p_id, @p_status, @p_userid, @p_is_superadmin)",
       "UpdatePurchaseMaterialStatus": "SELECT update_purchase_material_status(@p_id, @p_status, @p_userid, @p_is_superadmin)",
-      "UpdatePromiseToPay": "SELECT update_promise_to_pay(@p_id, @p_promised_amount, @p_promised_by, @p_userid, @p_is_superadmin)"
+      "UpdatePromiseToPay": "SELECT update_promise_to_pay(@p_id, @p_promised_amount, @p_promised_by, @p_userid, @p_is_superadmin)",
+      "GetUserDeviceForCall": "SELECT platform, push_token FROM user_device WHERE user_id = @UserId AND push_token IS NOT NULL ORDER BY last_login_at DESC LIMIT 1"
     },
 
     "Configuration": {

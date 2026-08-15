@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
+using SmartWorkerAutomation.Common.Automation;
 
 namespace SmartWorkerAutomation.DataProvider.Automation;
 
@@ -68,4 +69,21 @@ public interface IInquiryService
     /// <paramref name="id"/> (see update_promise_to_pay's own RETURN FOUND).
     /// </summary>
     Task<bool> UpdatePromiseToPayAsync(int id, decimal? promisedAmount, DateTime? promisedBy, string userIdClaim, bool isSuperAdmin);
+
+    /// <summary>
+    /// Records drawer's Call action (Finance category only, initial rollout).
+    /// Reads the record's phone field (PhoneFieldByCategory in
+    /// InquiryService), then looks up the *calling* user's own most-recently
+    /// logged-in device (not the record's assigned owner's device) via
+    /// user_device - if that device is Android with a registered push token,
+    /// fires a data-only FCM push carrying {type: 'auto_dial', phone_number}
+    /// so the app can place the call itself via native CALL_PHONE (see
+    /// mobile's AutoDialPlugin). Returns AutoDialTriggered = false (frontend
+    /// falls back to a `tel:` link on mobile, or shows the number on web) if
+    /// no such device is registered, the push send fails, or the platform
+    /// isn't Android (iOS can't auto-dial at all - Apple blocks it
+    /// categorically). Returns null if no record matched (wrong id/category,
+    /// or not this user's record).
+    /// </summary>
+    Task<CallInitiationResult?> InitiateCallAsync(string category, int id, string userIdClaim, bool isSuperAdmin);
 }

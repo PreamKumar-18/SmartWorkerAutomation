@@ -100,6 +100,38 @@ public class FirebasePushService : IFirebasePushService, IDisposable
     }
 
     /// <summary>
+    /// See IFirebasePushService.SendDataOnlyAsync's doc comment for why this
+    /// omits the `notification` block SendAsync above includes.
+    /// </summary>
+    public async Task SendDataOnlyAsync(
+        string accessToken,
+        string pushToken,
+        IReadOnlyDictionary<string, string> data,
+        CancellationToken cancellationToken = default)
+    {
+        var payload = new
+        {
+            message = new
+            {
+                token = pushToken,
+                data,
+                android = new { priority = "high" },
+            },
+        };
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"https://fcm.googleapis.com/v1/projects/{_projectId}/messages:send")
+        {
+            Content = JsonContent.Create(payload),
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
+    /// <summary>
     /// Same claim set as n8n's "Sign JWT for FCM1" node
     /// (iss/scope/aud/iat/exp, RS256, 1-hour lifetime) - built via a raw
     /// JwtPayload rather than the JwtSecurityToken(notBefore, expires, ...)
