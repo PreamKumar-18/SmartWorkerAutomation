@@ -99,10 +99,12 @@ public class InquiryService : IInquiryService
         }
 
         using var connection = _connectionFactory.CreateConnection();
+        bool isPurchase = category.Trim() == "purchase";
+        string queryKey = isPurchase ? "Inquiry:GetAllWithJoin" : "Inquiry:GetAll";
 
         if (isSuperAdmin || GlobalCategories.Contains(category.Trim()))
         {
-            var sql = _queryStore.Render("Inquiry:GetAll", new Dictionary<string, string> { ["ViewName"] = viewName });
+            var sql = _queryStore.Render(queryKey, new Dictionary<string, string> { ["ViewName"] = viewName });
             return await connection.QueryAsync(sql);
         }
         else
