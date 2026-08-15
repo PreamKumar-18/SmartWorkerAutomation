@@ -56,6 +56,52 @@ public class InquiryController : ControllerBase
     }
 
     /// <summary>
+    /// Single-record read straight from the category view (finance_view/
+    /// purchase_view/inventory_view/etc.) - backs the Records page's
+    /// row-click detail drawer, which wants one fresh, authoritative row
+    /// instead of trusting whatever copy is still sitting in the
+    /// already-loaded table array (can go stale after another change
+    /// elsewhere touches the same record). Same category access check and
+    /// superadmin/owned-row scoping as GET above.
+    /// </summary>
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetInquiryRecordById(int id, [FromQuery] string category)
+    {
+        try
+        {
+            var accessCheck = CheckCategoryAccess(category);
+            if (accessCheck != null) return accessCheck;
+
+            var userIdClaim = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
+                              ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            bool isSuperAdmin = User.IsInRole("SuperAdmin")
+                                || string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+
+            var data = await _inquiryService.GetRecordByIdAsync(category, id, userIdClaim ?? string.Empty, isSuperAdmin);
+
+            if (data is null)
+            {
+                return NotFound(new { message = $"No {category} record found with id {id}." });
+            }
+
+            return Ok(data);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while processing your request.", details = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Downloads every category's records as one .xlsx workbook, one
     /// worksheet per category - backs the Records page's Download button
     /// (no longer scoped to whichever tab is selected). A role-restricted
