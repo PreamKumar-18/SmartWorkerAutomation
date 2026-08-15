@@ -62,7 +62,7 @@ public class OrganisationOnboardingService : IOrganisationOnboardingService
         try
         {
             var encrypted = _encryptor.Encrypt(request.TenantConnectionString);
-            await _masterAuthRepository.InsertOrganisationInfoAsync(orgId, encrypted);
+            await _masterAuthRepository.InsertOrganisationInfoAsync(orgId, request.DbName, encrypted);
         }
         catch (Exception ex)
         {
@@ -76,7 +76,7 @@ public class OrganisationOnboardingService : IOrganisationOnboardingService
         {
             await _masterAuthRepository.InsertUserInfoAsync(
     orgId, request.AdminUsername, request.AdminEmail, passwordHash,
-    request.RoleId, request.AccessTypeId);
+    request.RoleId, request.AccessTypeId, request.AdminAllowedCategories);
         }
         catch (Exception ex)
         {

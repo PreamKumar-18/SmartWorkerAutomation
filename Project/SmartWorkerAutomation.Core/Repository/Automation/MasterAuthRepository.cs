@@ -53,14 +53,14 @@ public class MasterAuthRepository : IMasterAuthRepository
         return await connection.ExecuteScalarAsync<int>(query, new { Name = name, CompanyDetails = companyDetailsJson });
     }
 
-    public async Task<int> InsertOrganisationInfoAsync(int orgId, string encryptedConnectionString)
+    public async Task<int> InsertOrganisationInfoAsync(int orgId, string dbName, string encryptedConnectionString)
     {
         using var connection = _connectionFactory.CreateConnection();
         var query = _queryStore.Get("MasterAuth:InsertOrganisationInfo");
-        return await connection.ExecuteScalarAsync<int>(query, new { OrgId = orgId, EncryptedConnectionString = encryptedConnectionString });
+        return await connection.ExecuteScalarAsync<int>(query, new { OrgId = orgId, DbName = dbName, EncryptedConnectionString = encryptedConnectionString });
     }
 
-    public async Task<int> InsertUserInfoAsync(int orgId, string username, string email, string passwordHash, int roleId, int accessTypeId)
+    public async Task<int> InsertUserInfoAsync(int orgId, string username, string email, string passwordHash, int roleId, int accessTypeId, string[]? allowedCategories)
     {
         using var connection = _connectionFactory.CreateConnection();
         var query = _queryStore.Get("MasterAuth:InsertUserInfo");
@@ -71,10 +71,10 @@ public class MasterAuthRepository : IMasterAuthRepository
             Email = email,
             PasswordHash = passwordHash,
             RoleId = roleId,
-            AccessTypeId = accessTypeId
+            AccessTypeId = accessTypeId,
+            AllowedCategories = allowedCategories
         });
     }
-
 
     public async Task UpdatePasswordAsync(int masterUserId, string newPasswordHash)
     {

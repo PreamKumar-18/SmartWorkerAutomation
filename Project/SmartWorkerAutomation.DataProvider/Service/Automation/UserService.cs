@@ -206,7 +206,7 @@ public class UserService : IUserService
         try
         {
             masterUserId = await _masterAuthRepository.InsertUserInfoAsync(
-                orgId, request.Username, request.Email, hashedPassword, roleId, accessTypeId);
+                orgId, request.Username, request.Email, hashedPassword, roleId, accessTypeId, request.AllowedCategories);
         }
         catch (Exception ex)
         {

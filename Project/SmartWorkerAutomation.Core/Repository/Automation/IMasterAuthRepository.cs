@@ -14,8 +14,8 @@ public interface IMasterAuthRepository
     Task<IEnumerable<(int OrgId, string EncryptedConnectionString)>> GetAllActiveTenantConnectionsAsync();
 
     Task<int> InsertOrganisationAsync(string name, string? companyDetailsJson);
-    Task<int> InsertOrganisationInfoAsync(int orgId, string encryptedConnectionString);
-    Task<int> InsertUserInfoAsync(int orgId, string username, string email, string passwordHash, int roleId, int accessTypeId);
+    Task<int> InsertOrganisationInfoAsync(int orgId, string dbName, string encryptedConnectionString);
+    Task<int> InsertUserInfoAsync(int orgId, string username, string email, string passwordHash, int roleId, int accessTypeId, string[]? allowedCategories);
 
     Task UpdatePasswordAsync(int masterUserId, string newPasswordHash);
     Task UpdateEmailAndUsernameAsync(int masterUserId, string email, string username);

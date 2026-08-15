@@ -15,6 +15,7 @@ public class UserInfo
     public string RoleName { get; set; } = string.Empty;       // NEW - resolved via join
     public int AccessTypeId { get; set; }
     public string AccessTypeName { get; set; } = string.Empty; // NEW - resolved via join
+    public string[]? AllowedCategories { get; set; }
     public bool Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
