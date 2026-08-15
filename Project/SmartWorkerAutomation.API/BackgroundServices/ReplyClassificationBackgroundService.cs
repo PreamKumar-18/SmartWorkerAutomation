@@ -115,6 +115,21 @@ public class ReplyClassificationBackgroundService : BackgroundService
         return seconds is > 0 ? TimeSpan.FromSeconds(seconds.Value) : DefaultPollInterval;
     }
 
+    /// <summary>
+    /// Phase 6 rollout scoping (plan's own recommendation: "enable for one
+    /// category first, watch real classifications manually before trusting
+    /// it at volume, then expand"). Re-read every cycle same as
+    /// Enabled/PollIntervalSeconds, so widening to Purchase/Inventory later
+    /// is an appsettings.json edit, not a redeploy. Defaults to Finance-only
+    /// if the setting is missing, rather than defaulting to "everything" -
+    /// an absent config value should never silently widen scope.
+    /// </summary>
+    private string[] GetEnabledCategories()
+    {
+        var categories = _configuration.GetSection("Automation:ReplyClassification:Categories").Get<string[]>();
+        return categories is { Length: > 0 } ? categories : new[] { "Finance" };
+    }
+
     private async Task RunPollCycleAsync(CancellationToken stoppingToken)
     {
         using var scope = _scopeFactory.CreateScope();
@@ -156,7 +171,7 @@ public class ReplyClassificationBackgroundService : BackgroundService
         using var connection = new NpgsqlConnection(tenantConnectionString);
 
         var fetchSql = _queryStore.Get("ReplyClassification:FetchUnclassified");
-        var fetched = (await connection.QueryAsync(fetchSql)).ToList();
+        var fetched = (await connection.QueryAsync(fetchSql, new { Categories = GetEnabledCategories() })).ToList();
         if (fetched.Count == 0)
         {
             return;

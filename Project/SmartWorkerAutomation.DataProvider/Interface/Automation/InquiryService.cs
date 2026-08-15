@@ -119,6 +119,39 @@ public class InquiryService : IInquiryService
         }
     }
 
+    public async Task<dynamic?> GetRecordByIdAsync(string category, int id, string userIdClaim, bool isSuperAdmin)
+    {
+        if (string.IsNullOrWhiteSpace(category))
+        {
+            throw new ArgumentException("Category is required.");
+        }
+
+        var normalizedCategory = category.Trim();
+
+        if (!CategoryToViewMap.TryGetValue(normalizedCategory, out var viewName))
+        {
+            throw new ArgumentException($"Invalid category: '{category}'. Allowed categories are: {string.Join(", ", CategoryToViewMap.Keys)}");
+        }
+
+        using var connection = _connectionFactory.CreateConnection();
+
+        if (isSuperAdmin || GlobalCategories.Contains(normalizedCategory))
+        {
+            var sql = _queryStore.Render("Inquiry:GetById", new Dictionary<string, string> { ["ViewName"] = viewName });
+            return await connection.QuerySingleOrDefaultAsync(sql, new { Id = id });
+        }
+        else
+        {
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                throw new UnauthorizedAccessException("Invalid user ID in token.");
+            }
+
+            var sql = _queryStore.Render("Inquiry:GetByIdForUser", new Dictionary<string, string> { ["ViewName"] = viewName });
+            return await connection.QuerySingleOrDefaultAsync(sql, new { Id = id, UserId = userId });
+        }
+    }
+
     public async Task<bool> UpdateFileStatusAsync(int id, string status, string userIdClaim, bool isSuperAdmin)
     {
         if (string.IsNullOrWhiteSpace(status))
@@ -141,6 +174,36 @@ public class InquiryService : IInquiryService
         {
             p_id = id,
             p_status = status,
+            p_userid = userId,
+            p_is_superadmin = isSuperAdmin
+        });
+    }
+
+    /// <summary>
+    /// Records drawer's Promise to pay section - see the interface's own
+    /// doc comment. No category lookup at all (unlike UpdateRecordAsync/
+    /// UpdateRecordStatusAsync) since promised_amount/snooze_until live on
+    /// automation_records directly, keyed only by id - same shape as
+    /// UpdateFileStatusAsync just above.
+    /// </summary>
+    public async Task<bool> UpdatePromiseToPayAsync(int id, decimal? promisedAmount, DateTime? promisedBy, string userIdClaim, bool isSuperAdmin)
+    {
+        int userId = 0;
+        if (!isSuperAdmin)
+        {
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out userId))
+            {
+                throw new UnauthorizedAccessException("Invalid user ID in token.");
+            }
+        }
+
+        using var connection = _connectionFactory.CreateConnection();
+        var sql = _queryStore.Get("Inquiry:UpdatePromiseToPay");
+        return await connection.ExecuteScalarAsync<bool>(sql, new
+        {
+            p_id = id,
+            p_promised_amount = promisedAmount,
+            p_promised_by = promisedBy,
             p_userid = userId,
             p_is_superadmin = isSuperAdmin
         });

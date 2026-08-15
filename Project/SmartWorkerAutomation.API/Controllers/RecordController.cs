@@ -107,4 +107,48 @@ public class RecordController : ControllerBase
             return StatusCode(500, new { message = "An error occurred while processing your request.", details = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Records drawer's Promise to pay section - "Promised amount"/"Promised
+    /// by" (automation_records.promised_amount/snooze_until). No category in
+    /// the request - see InquiryService.UpdatePromiseToPayAsync's own doc
+    /// comment for why this endpoint is id-only, unlike StatusUpdate above.
+    /// </summary>
+    [HttpPost("PromiseToPay")]
+    public async Task<IActionResult> UpdatePromiseToPay([FromBody] UpdatePromiseToPayRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var userIdClaim = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
+                              ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            bool isSuperAdmin = User.IsInRole("SuperAdmin")
+                                || string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+
+            var success = await _inquiryService.UpdatePromiseToPayAsync(request.Id, request.PromisedAmount, request.PromisedBy, userIdClaim ?? string.Empty, isSuperAdmin);
+            if (!success)
+            {
+                return NotFound(new { message = "Record not found or user does not have permission to update it." });
+            }
+
+            return Ok(new { message = "Promise to pay updated successfully." });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while processing your request.", details = ex.Message });
+        }
+    }
 }
