@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -7,6 +8,22 @@ namespace SmartWorkerAutomation.DataProvider.Automation;
 public interface IInquiryService
 {
     Task<IEnumerable<dynamic>> GetInquiryDataAsync(string category, string userIdClaim, bool isSuperAdmin);
+
+    /// <summary>
+    /// Single-record read, straight from the same category view
+    /// GetInquiryDataAsync lists from (finance_view/purchase_view/
+    /// inventory_view/etc. via CategoryToViewMap) - backs the Records page's
+    /// row-click detail drawer, which wants one fresh, authoritative row
+    /// rather than trusting whatever copy is still sitting in the
+    /// already-loaded table array (which can be stale after another change
+    /// elsewhere). Same superadmin/global-vs-owned scoping as
+    /// GetInquiryDataAsync: non-superadmins only ever get their own row
+    /// (Inquiry:GetByIdForUser filters by userid), so this can't be used to
+    /// probe another user's record by id. Returns null if no row matched
+    /// (wrong id, wrong category, or not this user's record).
+    /// </summary>
+    Task<dynamic?> GetRecordByIdAsync(string category, int id, string userIdClaim, bool isSuperAdmin);
+
     Task<bool> UpdateFileStatusAsync(int id, string status, string userIdClaim, bool isSuperAdmin);
 
     /// <summary>
@@ -38,4 +55,17 @@ public interface IInquiryService
     /// or not this user's record).
     /// </summary>
     Task<dynamic?> UpdateRecordStatusAsync(string category, int id, string newStatus, string userIdClaim, bool isSuperAdmin);
+
+    /// <summary>
+    /// Records drawer's Promise to pay section - writes promised_amount/
+    /// snooze_until directly on automation_records (see
+    /// Database/update_promise_to_pay.sql), not any category's own
+    /// business_data table, so this is category-agnostic (no `category`
+    /// parameter, unlike UpdateRecordAsync/UpdateRecordStatusAsync) - same
+    /// "just needs the id" shape as UpdateFileStatusAsync. Either value may
+    /// be null to clear that half of the promise without touching the
+    /// other. Returns false if no automation_records row exists for
+    /// <paramref name="id"/> (see update_promise_to_pay's own RETURN FOUND).
+    /// </summary>
+    Task<bool> UpdatePromiseToPayAsync(int id, decimal? promisedAmount, DateTime? promisedBy, string userIdClaim, bool isSuperAdmin);
 }
