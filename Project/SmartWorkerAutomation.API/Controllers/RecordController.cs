@@ -151,4 +151,49 @@ public class RecordController : ControllerBase
             return StatusCode(500, new { message = "An error occurred while processing your request.", details = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Records drawer's Call action (Finance only, initial rollout) - see
+    /// InquiryService.InitiateCallAsync's own doc comment for the full round
+    /// trip. Returns 200 with { phoneNumber, autoDialTriggered } either way
+    /// (never fails just because auto-dial didn't fire) - only 404s when the
+    /// record itself doesn't exist/isn't this user's.
+    /// </summary>
+    [HttpPost("Call")]
+    public async Task<IActionResult> InitiateCall([FromBody] InitiateCallRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var userIdClaim = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
+                              ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            bool isSuperAdmin = User.IsInRole("SuperAdmin")
+                                || string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+
+            var result = await _inquiryService.InitiateCallAsync(request.Category, request.Id, userIdClaim ?? string.Empty, isSuperAdmin);
+            if (result is null)
+            {
+                return NotFound(new { message = "Record not found or user does not have permission to call it." });
+            }
+
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while processing your request.", details = ex.Message });
+        }
+    }
 }
