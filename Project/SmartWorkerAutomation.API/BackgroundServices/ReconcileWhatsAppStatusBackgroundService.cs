@@ -1,5 +1,7 @@
 using Dapper;
+using Npgsql;
 using SmartWorkerAutomation.Core.Repository.Automation;
+using SmartWorkerAutomation.Core.Security;
 
 namespace SmartWorkerAutomation.API.BackgroundServices;
 
@@ -17,18 +19,19 @@ public class ReconcileWhatsAppStatusBackgroundService : BackgroundService
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(2);
 
-    private readonly DbConnectionFactory _connectionFactory;
     private readonly IQueryStore _queryStore;
     private readonly ILogger<ReconcileWhatsAppStatusBackgroundService> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ConnectionStringEncryptor _encryptor;
 
     public ReconcileWhatsAppStatusBackgroundService(
-        DbConnectionFactory connectionFactory,
         IQueryStore queryStore,
-        ILogger<ReconcileWhatsAppStatusBackgroundService> logger)
+        ILogger<ReconcileWhatsAppStatusBackgroundService> logger, IServiceScopeFactory scopeFactory, ConnectionStringEncryptor encryptor)
     {
-        _connectionFactory = connectionFactory;
         _queryStore = queryStore;
         _logger = logger;
+        _scopeFactory = scopeFactory;
+        _encryptor = encryptor;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -37,13 +40,11 @@ public class ReconcileWhatsAppStatusBackgroundService : BackgroundService
         {
             try
             {
-                using var connection = _connectionFactory.CreateConnection();
-                var sql = _queryStore.Get("WhatsAppReconcile:Reconcile");
-                await connection.ExecuteAsync(sql);
+                await RunReconcileCycleAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "WF: Reconcile WhatsApp Status (Schedule) - reconcile call failed; will retry next cycle.");
+                _logger.LogError(ex, "WF: Reconcile WhatsApp Status (Schedule) - cycle failed; will retry next cycle.");
             }
 
             try
@@ -53,6 +54,29 @@ public class ReconcileWhatsAppStatusBackgroundService : BackgroundService
             catch (OperationCanceledException)
             {
                 break;
+            }
+        }
+    }
+
+    private async Task RunReconcileCycleAsync()
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var masterAuthRepository = scope.ServiceProvider.GetRequiredService<IMasterAuthRepository>();
+
+        var tenants = await masterAuthRepository.GetAllActiveTenantConnectionsAsync();
+
+        foreach (var tenant in tenants)
+        {
+            try
+            {
+                var decrypted = _encryptor.Decrypt(tenant.EncryptedConnectionString);
+                using var connection = new NpgsqlConnection(decrypted);
+                var sql = _queryStore.Get("WhatsAppReconcile:Reconcile");
+                await connection.ExecuteAsync(sql);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WF: Reconcile WhatsApp Status (Schedule) - reconcile call failed for orgid {OrgId}; will retry next cycle.", tenant.OrgId);
             }
         }
     }

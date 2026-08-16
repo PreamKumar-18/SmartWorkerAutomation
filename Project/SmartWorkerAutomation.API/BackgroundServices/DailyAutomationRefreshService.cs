@@ -1,6 +1,8 @@
 using Dapper;
 using Microsoft.Extensions.Configuration;
+using Npgsql;
 using SmartWorkerAutomation.Core.Repository.Automation;
+using SmartWorkerAutomation.Core.Security;
 
 namespace SmartWorkerAutomation.API.BackgroundServices;
 
@@ -29,23 +31,25 @@ public class DailyAutomationRefreshService : BackgroundService
 {
     private static readonly TimeSpan DefaultRunTimeOfDayIst = new(5, 0, 0);
 
-    private readonly DbConnectionFactory _connectionFactory;
     private readonly IQueryStore _queryStore;
     private readonly ILogger<DailyAutomationRefreshService> _logger;
     private readonly TimeZoneInfo _istZone;
     private readonly TimeSpan _runTimeOfDayIst;
+    private readonly ConnectionStringEncryptor _encryptor;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public DailyAutomationRefreshService(
-        DbConnectionFactory connectionFactory,
         IQueryStore queryStore,
         IConfiguration configuration,
-        ILogger<DailyAutomationRefreshService> logger)
+        ILogger<DailyAutomationRefreshService> logger,
+        ConnectionStringEncryptor encryptor, IServiceScopeFactory scopeFactory)
     {
-        _connectionFactory = connectionFactory;
         _queryStore = queryStore;
         _logger = logger;
         _istZone = ResolveIndiaTimeZone(logger);
         _runTimeOfDayIst = ResolveRunTimeOfDay(configuration, logger);
+        _encryptor = encryptor;
+        _scopeFactory = scopeFactory;
     }
 
     /// <summary>
@@ -107,19 +111,27 @@ public class DailyAutomationRefreshService : BackgroundService
 
     private async Task RunRefreshAsync()
     {
-        try
+        using var scope = _scopeFactory.CreateScope();
+        var masterAuthRepository = scope.ServiceProvider.GetRequiredService<IMasterAuthRepository>();
+
+        var tenants = await masterAuthRepository.GetAllActiveTenantConnectionsAsync();
+
+        foreach (var tenant in tenants)
         {
-            using var connection = _connectionFactory.CreateConnection();
-            var sql = _queryStore.Get("Automation:DailyRefresh");
-            await connection.ExecuteAsync(sql);
-            _logger.LogInformation("WF: Daily Refresh Automation Records (5AM) completed successfully.");
-        }
-        catch (Exception ex)
-        {
-            // Best-effort daily job: log and let the loop pick it up again
-            // tomorrow rather than crashing the whole API host over one
-            // failed refresh.
-            _logger.LogError(ex, "WF: Daily Refresh Automation Records (5AM) failed.");
+            try
+            {
+                var decrypted = _encryptor.Decrypt(tenant.EncryptedConnectionString);
+                using var connection = new NpgsqlConnection(decrypted);
+                var sql = _queryStore.Get("Automation:DailyRefresh");
+                await connection.ExecuteAsync(sql);
+                _logger.LogInformation("WF: Daily Refresh Automation Records (5AM) completed for orgid {OrgId}.", tenant.OrgId);
+            }
+            catch (Exception ex)
+            {
+                // One tenant's failure (bad connection string, DB down,
+                // etc.) must not stop the refresh for every other tenant.
+                _logger.LogError(ex, "WF: Daily Refresh Automation Records (5AM) failed for orgid {OrgId}.", tenant.OrgId);
+            }
         }
     }
 

@@ -1,14 +1,17 @@
-using System.Data;
 using Dapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
+using SmartWorkerAutomation.Core.Repository.Automation;
+using System.Data;
 
 namespace SmartWorkerAutomation.Core.Repository.Automation;
 
 public class DbConnectionFactory
 {
     private readonly string _connectionString;
-
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ITenantResolverService _tenantResolver;
     static DbConnectionFactory()
     {
         // Dapper 2.1.79 has no built-in DbType mapping for System.DateOnly -
@@ -22,15 +25,36 @@ public class DbConnectionFactory
         SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
     }
 
-    public DbConnectionFactory(IConfiguration configuration)
+    public DbConnectionFactory(IHttpContextAccessor httpContextAccessor, ITenantResolverService tenantResolver)
     {
-        _connectionString = configuration.GetConnectionString("SmartWorkerConnection")
-            ?? throw new InvalidOperationException("Connection string 'SmartWorkerConnection' not found.");
+        _httpContextAccessor = httpContextAccessor;
+        _tenantResolver = tenantResolver;
     }
 
     public IDbConnection CreateConnection()
     {
-        return new NpgsqlConnection(_connectionString);
+        var connectionString = ResolveConnectionStringAsync().GetAwaiter().GetResult();
+        return new NpgsqlConnection(connectionString);
+    }
+    private async Task<string> ResolveConnectionStringAsync()
+    {
+        var httpContext = _httpContextAccessor.HttpContext
+            ?? throw new InvalidOperationException(
+                "DbConnectionFactory.CreateConnection called outside an HTTP request context - " +
+                "background services must resolve their own tenant connection explicitly, not via this factory.");
+
+        var orgIdClaim = httpContext.User.FindFirst("orgid")?.Value
+            ?? throw new InvalidOperationException(
+                "No 'orgid' claim on the current user - request is unauthenticated or the token predates multi-tenancy.");
+
+        if (!int.TryParse(orgIdClaim, out var orgId))
+        {
+            throw new InvalidOperationException($"'orgid' claim value '{orgIdClaim}' is not a valid integer.");
+        }
+
+        var connectionString = await _tenantResolver.GetTenantConnectionStringAsync(orgId);
+        return connectionString
+            ?? throw new InvalidOperationException($"Could not resolve a connection string for orgid {orgId}.");
     }
 
     private sealed class DateOnlyTypeHandler : SqlMapper.TypeHandler<DateOnly>

@@ -1,9 +1,11 @@
+using Dapper;
+using Npgsql;
+using SmartWorkerAutomation.Common.Automation;
+using SmartWorkerAutomation.Core.Repository.Automation;
+using SmartWorkerAutomation.Core.Security;
+using SmartWorkerAutomation.DataProvider.Automation;
 using System.Data;
 using System.Text.Json;
-using SmartWorkerAutomation.Common.Automation;
-using Dapper;
-using SmartWorkerAutomation.Core.Repository.Automation;
-using SmartWorkerAutomation.DataProvider.Automation;
 
 namespace SmartWorkerAutomation.API.BackgroundServices;
 
@@ -54,24 +56,23 @@ public class ReplyClassificationBackgroundService : BackgroundService
 {
     private static readonly TimeSpan DefaultPollInterval = TimeSpan.FromSeconds(60);
 
-    private readonly DbConnectionFactory _connectionFactory;
     private readonly IQueryStore _queryStore;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IConfiguration _configuration;
     private readonly ILogger<ReplyClassificationBackgroundService> _logger;
+    private readonly ConnectionStringEncryptor _encryptor;
 
     public ReplyClassificationBackgroundService(
-        DbConnectionFactory connectionFactory,
         IQueryStore queryStore,
         IServiceScopeFactory scopeFactory,
         IConfiguration configuration,
-        ILogger<ReplyClassificationBackgroundService> logger)
+        ILogger<ReplyClassificationBackgroundService> logger, ConnectionStringEncryptor encryptor)
     {
-        _connectionFactory = connectionFactory;
         _queryStore = queryStore;
         _scopeFactory = scopeFactory;
         _configuration = configuration;
         _logger = logger;
+        _encryptor = encryptor;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -131,7 +132,43 @@ public class ReplyClassificationBackgroundService : BackgroundService
 
     private async Task RunPollCycleAsync(CancellationToken stoppingToken)
     {
-        using var connection = _connectionFactory.CreateConnection();
+        using var scope = _scopeFactory.CreateScope();
+        var masterAuthRepository = scope.ServiceProvider.GetRequiredService<IMasterAuthRepository>();
+
+        var tenants = await masterAuthRepository.GetAllActiveTenantConnectionsAsync();
+
+        foreach (var tenant in tenants)
+        {
+            if (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+
+            string decryptedConnStr;
+            try
+            {
+                decryptedConnStr = _encryptor.Decrypt(tenant.EncryptedConnectionString);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WF: Reply Processor (Classify) - failed to decrypt connection string for orgid {OrgId}; skipping this tenant this cycle.", tenant.OrgId);
+                continue;
+            }
+
+            try
+            {
+                await RunPollCycleForTenantAsync(decryptedConnStr, tenant.OrgId, stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WF: Reply Processor (Classify) - poll cycle failed for orgid {OrgId}; will retry next cycle.", tenant.OrgId);
+            }
+        }
+    }
+
+    private async Task RunPollCycleForTenantAsync(string tenantConnectionString, int orgId, CancellationToken stoppingToken)
+    {
+        using var connection = new NpgsqlConnection(tenantConnectionString);
 
         var fetchSql = _queryStore.Get("ReplyClassification:FetchUnclassified");
         var fetched = (await connection.QueryAsync(fetchSql, new { Categories = GetEnabledCategories() })).ToList();
@@ -160,12 +197,8 @@ public class ReplyClassificationBackgroundService : BackgroundService
             }
             catch (Exception ex)
             {
-                // A record with no reply_intents row yet stays eligible for
-                // the next cycle - see ReplyClassificationService's doc
-                // comment for why this is the safer choice vs. inserting a
-                // fallback "unclear" row.
                 var inboundMessageId = fields.TryGetValue("inbound_message_id", out var idValue) ? idValue : "?";
-                _logger.LogError(ex, "WF: Reply Processor (Classify) - failed to classify inbound_message_id={InboundMessageId}; will retry next cycle.", inboundMessageId);
+                _logger.LogError(ex, "WF: Reply Processor (Classify) - orgid {OrgId} - failed to classify inbound_message_id={InboundMessageId}; will retry next cycle.", orgId, inboundMessageId);
             }
         }
 
@@ -184,7 +217,8 @@ public class ReplyClassificationBackgroundService : BackgroundService
         }
 
         _logger.LogInformation(
-            "WF: Reply Processor (Classify) - classified {ClassifiedCount}/{FetchedCount} pending replies, sent {PushCount} approval push notification(s).",
+            "WF: Reply Processor (Classify) - orgid {OrgId} - classified {ClassifiedCount}/{FetchedCount} pending replies, sent {PushCount} approval push notification(s).",
+            orgId,
             classifiedCount,
             fetched.Count,
             toNotify.Count);

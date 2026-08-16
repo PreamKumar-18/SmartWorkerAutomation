@@ -19,6 +19,23 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
+    //[HttpPost("register")]
+    //public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+    //{
+    //    if (!ModelState.IsValid)
+    //    {
+    //        return BadRequest(ModelState);
+    //    }
+
+    //    var response = await _userService.RegisterAsync(request);
+    //    if (!response.Success)
+    //    {
+    //        return BadRequest(response);
+    //    }
+
+    //    return Ok(response);
+    //}
+
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
@@ -27,7 +44,16 @@ public class UserController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var response = await _userService.RegisterAsync(request);
+        if (request.OrgId <= 0)
+        {
+            return BadRequest(new AuthResponse { Success = false, Message = "OrgId is required." });
+        }
+
+        // TODO: replace with real seeded ids once confirmed (see UserController.Create)
+        var roleId = request.RoleId > 0 ? request.RoleId : 3;
+        var accessTypeId = request.AccessTypeId > 0 ? request.AccessTypeId : 1;
+
+        var response = await _userService.RegisterAsync(request, request.OrgId, roleId, accessTypeId);
         if (!response.Success)
         {
             return BadRequest(response);
@@ -103,6 +129,7 @@ public class UserController : ControllerBase
     /// self-registration endpoint above. Enforces that an 'Admin' creator
     /// can only create 'User' accounts (see UserService.CreateUserAsync).
     /// </summary>
+    /// 
     [Authorize]
     [HttpPost("create")]
     public async Task<IActionResult> Create([FromBody] RegisterRequest request)
@@ -113,7 +140,23 @@ public class UserController : ControllerBase
         }
 
         var creatorRoleName = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
-        var response = await _userService.CreateUserAsync(request, creatorRoleName);
+
+        var orgIdClaim = User.FindFirst("orgid")?.Value;
+        if (!int.TryParse(orgIdClaim, out var creatorOrgId))
+        {
+            return Unauthorized(new AuthResponse { Success = false, Message = "Could not resolve organisation from token." });
+        }
+
+        // TODO: confirm actual seeded ids for userrole/useraccesstype and
+        // replace these placeholders - currently assuming "User" role = 3 and
+        // a default "FullAccess"-equivalent = 1, per the earlier seed draft
+        // (SuperAdmin=1, Admin=2, User=3). Ideally these come from the request
+        // body (request.RoleId/request.AccessTypeId) once RegisterRequest has
+        // those fields, not hardcoded here.
+        var roleId = request.RoleId > 0 ? request.RoleId : 3;
+        var accessTypeId = request.AccessTypeId > 0 ? request.AccessTypeId : 1;
+
+        var response = await _userService.CreateUserAsync(request, creatorRoleName, creatorOrgId, roleId, accessTypeId);
         if (!response.Success)
         {
             return BadRequest(response);
@@ -121,7 +164,26 @@ public class UserController : ControllerBase
 
         return Ok(response);
     }
+    //[Authorize]
+    //[HttpPost("create")]
+    //public async Task<IActionResult> Create([FromBody] RegisterRequest request)
+    //{
+    //    if (!ModelState.IsValid)
+    //    {
+    //        return BadRequest(ModelState);
+    //    }
 
+    //    var creatorRoleName = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+    //    var response = await _userService.CreateUserAsync(request, creatorRoleName);
+    //    if (!response.Success)
+    //    {
+    //        return BadRequest(response);
+    //    }
+
+    //    return Ok(response);
+    //}
+
+    [Authorize]
     [HttpPost("changePassword")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
@@ -130,7 +192,13 @@ public class UserController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var response = await _userService.ChangePasswordAsync(request);
+        var orgIdClaim = User.FindFirst("orgid")?.Value;
+        if (!int.TryParse(orgIdClaim, out var orgId))
+        {
+            return Unauthorized(new AuthResponse { Success = false, Message = "Could not resolve organisation from token." });
+        }
+
+        var response = await _userService.ChangePasswordAsync(request, orgId);
         if (!response.Success)
         {
             return BadRequest(response);
@@ -138,6 +206,23 @@ public class UserController : ControllerBase
 
         return Ok(response);
     }
+
+    //[HttpPost("changePassword")]
+    //public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    //{
+    //    if (!ModelState.IsValid)
+    //    {
+    //        return BadRequest(ModelState);
+    //    }
+
+    //    var response = await _userService.ChangePasswordAsync(request);
+    //    if (!response.Success)
+    //    {
+    //        return BadRequest(response);
+    //    }
+
+    //    return Ok(response);
+    //}
 
     /// <summary>
     /// Registers/refreshes this device's push token, called right after

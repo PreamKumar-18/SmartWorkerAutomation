@@ -7,7 +7,6 @@ using Serilog.Events;
 using SmartWorkerAutomation.API.BackgroundServices;
 using SmartWorkerAutomation.Configuration.MiddleWare;
 using SmartWorkerAutomation.Configuration.ProgramConfiguration;
-using SmartWorkerAutomation.Core.Generic;
 using SmartWorkerAutomation.DataProvider.Interface;
 using SmartWorkerAutomation.DataProvider.Service;
 using System.Linq;
@@ -77,7 +76,7 @@ public class Program
     });
 
         builder.Services.AddSingleton<ILogServices, LogServices>();
-        builder.Services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+        //builder.Services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
         builder.Services.ConfigureMiddlewares(builder.Configuration);
 

@@ -1,10 +1,12 @@
+using Dapper;
+using Npgsql;
+using SmartWorkerAutomation.Core.Repository.Automation;
+using SmartWorkerAutomation.Core.Security;
+using SmartWorkerAutomation.DataProvider.Automation;
 using System.Data;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Dapper;
-using SmartWorkerAutomation.Core.Repository.Automation;
-using SmartWorkerAutomation.DataProvider.Automation;
 
 namespace SmartWorkerAutomation.API.BackgroundServices;
 
@@ -58,24 +60,23 @@ public class InboundEmailBackgroundService : BackgroundService
         new Regex(@"^--\s?$", RegexOptions.Multiline | RegexOptions.Compiled),
     ];
 
-    private readonly DbConnectionFactory _connectionFactory;
     private readonly IQueryStore _queryStore;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IConfiguration _configuration;
     private readonly ILogger<InboundEmailBackgroundService> _logger;
+    private readonly ConnectionStringEncryptor _encryptor;
 
     public InboundEmailBackgroundService(
-        DbConnectionFactory connectionFactory,
         IQueryStore queryStore,
         IServiceScopeFactory scopeFactory,
         IConfiguration configuration,
-        ILogger<InboundEmailBackgroundService> logger)
+        ILogger<InboundEmailBackgroundService> logger, ConnectionStringEncryptor encryptor)
     {
-        _connectionFactory = connectionFactory;
         _queryStore = queryStore;
         _scopeFactory = scopeFactory;
         _configuration = configuration;
         _logger = logger;
+        _encryptor = encryptor;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -131,6 +132,7 @@ public class InboundEmailBackgroundService : BackgroundService
     {
         using var scope = _scopeFactory.CreateScope();
         var gmail = scope.ServiceProvider.GetRequiredService<GmailClient>();
+        var masterAuthRepository = scope.ServiceProvider.GetRequiredService<IMasterAuthRepository>();
 
         var accessToken = await gmail.GetAccessTokenAsync(stoppingToken);
         var messageIds = await gmail.ListMessageIdsAsync(accessToken, since, stoppingToken);
@@ -140,14 +142,7 @@ public class InboundEmailBackgroundService : BackgroundService
             return;
         }
 
-        using var connection = _connectionFactory.CreateConnection();
-        // ProcessMessageAsync wraps Insert+MatchToRecord in a transaction
-        // (BeginTransaction), which - unlike Dapper's Query/Execute helpers -
-        // does not auto-open a closed connection and throws
-        // InvalidOperationException ("Connection is not open") if called on
-        // one. Same fix as ReplyReviewService.cs's identical transaction use.
-        connection.Open();
-        var insertedCount = 0;
+        var tenants = (await masterAuthRepository.GetAllActiveTenantConnectionsAsync()).ToList();
 
         foreach (var messageId in messageIds)
         {
@@ -156,17 +151,55 @@ public class InboundEmailBackgroundService : BackgroundService
                 break;
             }
 
+            JsonElement message;
             try
             {
-                var message = await gmail.GetMessageAsync(accessToken, messageId, stoppingToken);
-                if (await ProcessMessageAsync(connection, message, stoppingToken))
-                {
-                    insertedCount++;
-                }
+                message = await gmail.GetMessageAsync(accessToken, messageId, stoppingToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "WF: Inbound Email (Reply Capture) - failed to process Gmail message {MessageId}.", messageId);
+                _logger.LogError(ex, "WF: Inbound Email (Reply Capture) - failed to fetch Gmail message {MessageId}.", messageId);
+                continue;
+            }
+
+            // Shared inbox, unknown tenant per message - try each tenant DB in
+            // turn; ProcessMessageAsync rolls back (returns false) if nothing in
+            // THAT tenant's automation_records matches, so this is safe to try
+            // repeatedly across tenants. Stops at the first tenant that matches.
+            var matched = false;
+            foreach (var tenant in tenants)
+            {
+                string decryptedConnStr;
+                try
+                {
+                    decryptedConnStr = _encryptor.Decrypt(tenant.EncryptedConnectionString);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "WF: Inbound Email (Reply Capture) - failed to decrypt connection string for orgid {OrgId}; skipping this tenant.", tenant.OrgId);
+                    continue;
+                }
+
+                using var connection = new NpgsqlConnection(decryptedConnStr);
+                connection.Open();
+
+                try
+                {
+                    if (await ProcessMessageAsync(connection, message, stoppingToken))
+                    {
+                        matched = true;
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "WF: Inbound Email (Reply Capture) - orgid {OrgId} - failed to process Gmail message {MessageId}.", tenant.OrgId, messageId);
+                }
+            }
+
+            if (!matched)
+            {
+                _logger.LogInformation("WF: Inbound Email (Reply Capture) - message {MessageId} did not match any tenant's records.", messageId);
             }
         }
     }

@@ -6,18 +6,21 @@ namespace SmartWorkerAutomation.DataProvider.Automation;
 
 public interface IUserService
 {
-    Task<AuthResponse> RegisterAsync(RegisterRequest request);
+    //Task<AuthResponse> RegisterAsync(RegisterRequest request);
 
     /// <summary>
     /// Admin/SuperAdmin-authenticated user creation. Enforces that an
     /// 'Admin' creator can only create 'User' accounts - only a
     /// 'SuperAdmin' may create Admin or SuperAdmin accounts.
     /// </summary>
-    Task<AuthResponse> CreateUserAsync(RegisterRequest request, string creatorRoleName);
+    //Task<AuthResponse> CreateUserAsync(RegisterRequest request, string creatorRoleName);
 
+    Task<AuthResponse> RegisterAsync(RegisterRequest request, int orgId, int roleId, int accessTypeId);
+    Task<AuthResponse> CreateUserAsync(RegisterRequest request, string creatorRoleName, int creatorOrgId, int roleId, int accessTypeId);
     Task<AuthResponse> LoginAsync(LoginRequest request);
     Task<AuthResponse> UpdateUserAsync(UpdateUserRequest request);
-    Task<AuthResponse> ChangePasswordAsync(ChangePasswordRequest request);
+    Task<AuthResponse> ChangePasswordAsync(ChangePasswordRequest request, int orgId);
+    //Task<AuthResponse> ChangePasswordAsync(ChangePasswordRequest request);
     Task<IEnumerable<User>> GetAllUsersAsync();
 
     /// <summary>

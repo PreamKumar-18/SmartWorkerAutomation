@@ -1,10 +1,12 @@
+using Dapper;
+using Npgsql;
+using SmartWorkerAutomation.Common.Automation;
+using SmartWorkerAutomation.Core.Repository.Automation;
+using SmartWorkerAutomation.Core.Security;
+using SmartWorkerAutomation.DataProvider.Automation;
 using System.Data;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using SmartWorkerAutomation.Common.Automation;
-using Dapper;
-using SmartWorkerAutomation.Core.Repository.Automation;
-using SmartWorkerAutomation.DataProvider.Automation;
 
 namespace SmartWorkerAutomation.API.BackgroundServices;
 
@@ -60,21 +62,20 @@ public class ReminderSendBackgroundService : BackgroundService
     private static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan BetweenRecordsDelay = TimeSpan.FromSeconds(1);
 
-    private readonly DbConnectionFactory _connectionFactory;
     private readonly IQueryStore _queryStore;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<ReminderSendBackgroundService> _logger;
+    private readonly ConnectionStringEncryptor _encryptor;
 
     public ReminderSendBackgroundService(
-        DbConnectionFactory connectionFactory,
         IQueryStore queryStore,
         IServiceScopeFactory scopeFactory,
-        ILogger<ReminderSendBackgroundService> logger)
+        ILogger<ReminderSendBackgroundService> logger, ConnectionStringEncryptor encryptor)
     {
-        _connectionFactory = connectionFactory;
         _queryStore = queryStore;
         _scopeFactory = scopeFactory;
         _logger = logger;
+        _encryptor = encryptor;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -110,7 +111,49 @@ public class ReminderSendBackgroundService : BackgroundService
 
     private async Task RunPollCycleAsync(CancellationToken stoppingToken)
     {
-        using var connection = _connectionFactory.CreateConnection();
+        // IMasterAuthRepository is Scoped - can't be injected into this
+        // singleton BackgroundService's constructor - resolve it from a
+        // fresh scope, once per outer cycle, same pattern already used below
+        // for IEmailService/IWhatsAppService.
+        using var masterScope = _scopeFactory.CreateScope();
+        var masterAuthRepository = masterScope.ServiceProvider.GetRequiredService<IMasterAuthRepository>();
+
+        var tenants = await masterAuthRepository.GetAllActiveTenantConnectionsAsync();
+
+        foreach (var tenant in tenants)
+        {
+            if (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+
+            string decryptedConnStr;
+            try
+            {
+                decryptedConnStr = _encryptor.Decrypt(tenant.EncryptedConnectionString);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WF: Reminder Send (Automation) - failed to decrypt connection string for orgid {OrgId}; skipping this tenant this cycle.", tenant.OrgId);
+                continue;
+            }
+
+            try
+            {
+                await RunPollCycleForTenantAsync(decryptedConnStr, tenant.OrgId, stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                // One tenant's failure must not stop the cycle for every
+                // other tenant.
+                _logger.LogError(ex, "WF: Reminder Send (Automation) - poll cycle failed for orgid {OrgId}; will retry next cycle.", tenant.OrgId);
+            }
+        }
+    }
+
+    private async Task RunPollCycleForTenantAsync(string tenantConnectionString, int orgId, CancellationToken stoppingToken)
+    {
+        using var connection = new NpgsqlConnection(tenantConnectionString);
 
         var fetchSql = _queryStore.Get("ReminderSend:FetchPending");
         var fetched = (await connection.QueryAsync(fetchSql)).ToList();
@@ -137,8 +180,8 @@ public class ReminderSendBackgroundService : BackgroundService
 
         // IEmailService/IWhatsAppService are registered Scoped/typed-client
         // (Transient) - this BackgroundService is a singleton, so it can't
-        // hold them in its own constructor. One scope per poll cycle,
-        // resolved once and reused across every record in this batch.
+        // hold them in its own constructor. One scope per tenant per poll
+        // cycle, resolved once and reused across every record in this batch.
         using var scope = _scopeFactory.CreateScope();
         var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
         var whatsAppService = scope.ServiceProvider.GetRequiredService<IWhatsAppService>();
@@ -160,7 +203,7 @@ public class ReminderSendBackgroundService : BackgroundService
                 // A single malformed row (e.g. missing "id") must not abort
                 // the whole cycle - that would also skip the finalize step
                 // for every other, already-sent record in this batch.
-                _logger.LogError(ex, "WF: Reminder Send (Automation) - failed to process a pending record; skipping it this cycle.");
+                _logger.LogError(ex, "WF: Reminder Send (Automation) - orgid {OrgId} - failed to process a pending record; skipping it this cycle.", orgId);
             }
 
             try
@@ -182,11 +225,92 @@ public class ReminderSendBackgroundService : BackgroundService
         await connection.ExecuteAsync(reconcileSql);
 
         _logger.LogInformation(
-            "WF: Reminder Send (Automation) - processed {Count} pending record(s): {SentEmail} email sent, {SentWhatsapp} WhatsApp sent.",
+            "WF: Reminder Send (Automation) - orgid {OrgId} - processed {Count} pending record(s): {SentEmail} email sent, {SentWhatsapp} WhatsApp sent.",
+            orgId,
             results.Count,
             results.Count(r => r.EmailStatus == "sent"),
             results.Count(r => r.WhatsappStatus == "sent"));
     }
+
+    //private async Task RunPollCycleAsync(CancellationToken stoppingToken)
+    //{
+    //    using var connection = _connectionFactory.CreateConnection();
+
+    //    var fetchSql = _queryStore.Get("ReminderSend:FetchPending");
+    //    var fetched = (await connection.QueryAsync(fetchSql)).ToList();
+    //    if (fetched.Count == 0)
+    //    {
+    //        return;
+    //    }
+
+    //    var pending = fetched.Select(row => (IDictionary<string, object>)row).ToList();
+
+    //    var ids = pending
+    //        .Select(fields => fields.TryGetValue("id", out var idValue) && idValue is not null
+    //            ? Convert.ToInt32(idValue)
+    //            : (int?)null)
+    //        .Where(id => id.HasValue)
+    //        .Select(id => id!.Value)
+    //        .ToArray();
+
+    //    if (ids.Length > 0)
+    //    {
+    //        var claimSql = _queryStore.Get("ReminderSend:ClaimPending");
+    //        await connection.ExecuteAsync(claimSql, new { Ids = ids });
+    //    }
+
+    //    // IEmailService/IWhatsAppService are registered Scoped/typed-client
+    //    // (Transient) - this BackgroundService is a singleton, so it can't
+    //    // hold them in its own constructor. One scope per poll cycle,
+    //    // resolved once and reused across every record in this batch.
+    //    using var scope = _scopeFactory.CreateScope();
+    //    var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+    //    var whatsAppService = scope.ServiceProvider.GetRequiredService<IWhatsAppService>();
+
+    //    var results = new List<SendOutcome>(pending.Count);
+    //    foreach (var fields in pending)
+    //    {
+    //        if (stoppingToken.IsCancellationRequested)
+    //        {
+    //            break;
+    //        }
+
+    //        try
+    //        {
+    //            results.Add(await SendOneAsync(fields, emailService, whatsAppService));
+    //        }
+    //        catch (Exception ex)
+    //        {
+    //            // A single malformed row (e.g. missing "id") must not abort
+    //            // the whole cycle - that would also skip the finalize step
+    //            // for every other, already-sent record in this batch.
+    //            _logger.LogError(ex, "WF: Reminder Send (Automation) - failed to process a pending record; skipping it this cycle.");
+    //        }
+
+    //        try
+    //        {
+    //            await Task.Delay(BetweenRecordsDelay, stoppingToken);
+    //        }
+    //        catch (OperationCanceledException)
+    //        {
+    //            break;
+    //        }
+    //    }
+
+    //    foreach (var result in results)
+    //    {
+    //        await FinalizeAsync(connection, result);
+    //    }
+
+    //    var reconcileSql = _queryStore.Get("ReminderSend:Reconcile");
+    //    await connection.ExecuteAsync(reconcileSql);
+
+    //    _logger.LogInformation(
+    //        "WF: Reminder Send (Automation) - processed {Count} pending record(s): {SentEmail} email sent, {SentWhatsapp} WhatsApp sent.",
+    //        results.Count,
+    //        results.Count(r => r.EmailStatus == "sent"),
+    //        results.Count(r => r.WhatsappStatus == "sent"));
+    //}
 
     private static async Task<SendOutcome> SendOneAsync(
         IDictionary<string, object> fields,
