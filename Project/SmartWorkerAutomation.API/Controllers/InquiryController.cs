@@ -10,7 +10,7 @@ using SmartWorkerAutomation.DataProvider.Automation;
 
 namespace SmartWorkerAutomation.API.Controllers;
 
-[Authorize]
+[Authorize(AuthenticationSchemes = "CustomTokenScheme")]
 [ApiController]
 [Route("api/[controller]")]
 public class InquiryController : ControllerBase

@@ -1,8 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SmartWorkerAutomation.DataProvider.Automation;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
-using SmartWorkerAutomation.DataProvider.Automation;
 
 namespace SmartWorkerAutomation.API.Controllers;
 
@@ -21,6 +22,7 @@ namespace SmartWorkerAutomation.API.Controllers;
 /// are accepted unverified (logged as a warning) so capture can still work
 /// while that credential is pending.
 /// </summary>
+[Authorize(AuthenticationSchemes = "CustomTokenScheme")]
 [ApiController]
 [Route("api/whatsapp")]
 public class WhatsAppWebhookController : ControllerBase

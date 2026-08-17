@@ -62,7 +62,7 @@ public class OrganisationOnboardingService : IOrganisationOnboardingService
         try
         {
             var encrypted = _encryptor.Encrypt(request.TenantConnectionString);
-            await _masterAuthRepository.InsertOrganisationInfoAsync(orgId, request.DbName, encrypted);
+            await _masterAuthRepository.InsertOrganisationInfoAsync(orgId, request.DbName, encrypted, request.WebhookPhoneNumber);
         }
         catch (Exception ex)
         {
@@ -94,11 +94,11 @@ public class OrganisationOnboardingService : IOrganisationOnboardingService
             await tenantConnection.ExecuteScalarAsync<int>(registerSql, new
             {
                 p_email = request.AdminEmail,
-                p_phone = (string?)null,
+                p_phone = request.AdminPhone,
                 p_username = request.AdminUsername,
                 p_password = passwordHash,
                 p_redirecturl = (string?)null,
-                p_usertypeid = 1, // TODO confirm actual Admin UserTypeId constant - see UserTypeIds in Common
+                p_usertypeid = request.RoleId, 
                 p_createdby = "System",
             });
         }

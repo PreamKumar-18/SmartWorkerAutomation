@@ -6,16 +6,19 @@ using System.Text;
 using SmartWorkerAutomation.Common.Automation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using SmartWorkerAutomation.DataProvider.Interface.Automation;
 
 namespace SmartWorkerAutomation.DataProvider.Automation;
 
 public class TokenService : ITokenService
 {
     private readonly IConfiguration _configuration;
+    private readonly ITokenEncryptionService _tokenEncryptionService;
 
-    public TokenService(IConfiguration configuration)
+    public TokenService(IConfiguration configuration, ITokenEncryptionService tokenEncryptionService)
     {
         _configuration = configuration;
+        _tokenEncryptionService = tokenEncryptionService;
     }
 
     public string GenerateToken(User user, UserInfo masterUserInfo)
@@ -50,7 +53,11 @@ public class TokenService : ITokenService
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(durationMinutes),
             signingCredentials: credentials);
+        var rawToken = new JwtSecurityTokenHandler().WriteToken(token);
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        // Encrypt before returning - client stores/sends this opaque string,
+        // never the raw JWT. CustomTokenAuthenticationHandler decrypts it back
+        // on every subsequent request.
+        return _tokenEncryptionService.Encrypt(rawToken);
     }
 }

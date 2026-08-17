@@ -19,7 +19,7 @@ namespace SmartWorkerAutomation.API.Controllers;
 /// rule as DashboardController/InquiryController's CheckCategoryAccess
 /// (empty/null categories claim = no restriction).
 /// </summary>
-[Authorize]
+[Authorize(AuthenticationSchemes = "CustomTokenScheme")]
 [ApiController]
 [Route("api/[controller]")]
 public class ReplyReviewController : ControllerBase
