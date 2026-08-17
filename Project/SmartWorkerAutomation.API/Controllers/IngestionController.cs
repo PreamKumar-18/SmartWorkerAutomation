@@ -13,6 +13,7 @@ using SmartWorkerAutomation.DataProvider.Automation;
 
 namespace SmartWorkerAutomation.API.Controllers;
 
+[Authorize(AuthenticationSchemes = "CustomTokenScheme")]
 [ApiController]
 [Route("api/[controller]")]
 //[Authorize]
@@ -51,6 +52,7 @@ public class IngestionController : ControllerBase
     /// natively via FileIngestionService, depending on
     /// Ingestion:UseNativePipeline in appsettings.json.
     /// </summary>
+
     [HttpPost("upload")]
     [RequestSizeLimit(50_000_000)] // 50 MB
     public async Task<IActionResult> UploadFile(IFormFile file, CancellationToken cancellationToken)

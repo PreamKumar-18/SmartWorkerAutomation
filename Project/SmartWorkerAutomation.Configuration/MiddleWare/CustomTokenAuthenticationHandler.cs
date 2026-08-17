@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using SmartWorkerAutomation.DataProvider.Interface.Automation;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -11,195 +14,70 @@ using System.Text.Json;
 
 namespace SmartWorkerAutomation.Configuration.MiddleWare;
 
-public class CustomTokenAuthenticationHandler
-    : AuthenticationHandler<AuthenticationSchemeOptions>
+public class CustomTokenAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
-    private static readonly string _encryptionKey = "b14ca5898a4e4133bbce2ea2315a1916";
+    private readonly ITokenEncryptionService _tokenEncryptionService;
+    private readonly IConfiguration _configuration;
 
     public CustomTokenAuthenticationHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
-        ISystemClock clock,
+        ITokenEncryptionService tokenEncryptionService,
         IConfiguration configuration)
-        : base(options, logger, encoder, clock)
+        : base(options, logger, encoder)
     {
+        _tokenEncryptionService = tokenEncryptionService;
+        _configuration = configuration;
     }
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        string encryptedToken = null;
+        if (!Request.Headers.TryGetValue("Authorization", out var authHeaderValues))
+            return Task.FromResult(AuthenticateResult.NoResult());
 
-        // 1️⃣ Normal API calls (Authorization header)
-        if (Request.Headers.ContainsKey("Authorization"))
-        {
-            encryptedToken = Request.Headers["Authorization"]
-                .ToString()
-                .Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase)
-                .Trim();
-        }
+        var authHeader = authHeaderValues.ToString();
+        if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            return Task.FromResult(AuthenticateResult.NoResult());
 
-        // 2️⃣ SignalR calls (query string)
-        if (string.IsNullOrEmpty(encryptedToken))
-        {
-            encryptedToken = Request.Query["access_token"];
-        }
+        var encryptedToken = authHeader["Bearer ".Length..].Trim();
 
-        if (string.IsNullOrWhiteSpace(encryptedToken))
-        {
-            return Task.FromResult(
-                AuthenticateResult.Fail("Authorization token missing"));
-        }
-
+        string rawJwt;
         try
         {
-            // 🔐 Decrypt AES token → JWT
-            string jwt = DecryptToken(encryptedToken, _encryptionKey);
-
-            if (string.IsNullOrWhiteSpace(jwt))
-            {
-                return Task.FromResult(
-                    AuthenticateResult.Fail("Decrypted token is empty"));
-            }
-
-            // JWT must have 3 parts
-            var parts = jwt.Split('.');
-            if (parts.Length != 3)
-            {
-                return Task.FromResult(
-                    AuthenticateResult.Fail("Invalid JWT format"));
-            }
-
-            // Decode payload
-            string jsonPayload = Base64UrlDecode(parts[1]);
-
-            var tokenData =
-                JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonPayload);
-
-            if (tokenData == null)
-            {
-                return Task.FromResult(
-                    AuthenticateResult.Fail("Invalid JWT payload"));
-            }
-
-            // ⏰ EXPIRY CHECK
-            if (tokenData.TryGetValue("exp", out var expElement)
-                && expElement.ValueKind == JsonValueKind.Number)
-            {
-                long exp = expElement.GetInt64();
-                var expiry =
-                    DateTimeOffset.FromUnixTimeSeconds(exp).UtcDateTime;
-
-                if (expiry < DateTime.UtcNow)
-                {
-                    return Task.FromResult(
-                        AuthenticateResult.Fail("Token expired"));
-                }
-            }
-
-            // 🧾 BUILD CLAIMS
-            var claims = new List<Claim>();
-
-            if (tokenData.TryGetValue("nameid", out var nameId)
-                && nameId.ValueKind == JsonValueKind.String)
-            {
-                claims.Add(new Claim(
-                    ClaimTypes.NameIdentifier, nameId.GetString()));
-            }
-
-            if (tokenData.TryGetValue("unique_name", out var name)
-                && name.ValueKind == JsonValueKind.String)
-            {
-                claims.Add(new Claim(
-                    ClaimTypes.Name, name.GetString()));
-            }
-
-            if (tokenData.TryGetValue("email", out var email)
-                && email.ValueKind == JsonValueKind.String)
-            {
-                claims.Add(new Claim(
-                    ClaimTypes.Email, email.GetString()));
-            }
-
-            if (tokenData.TryGetValue("role", out var role)
-                && role.ValueKind == JsonValueKind.String)
-            {
-                claims.Add(new Claim(
-                    ClaimTypes.Role, role.GetString()));
-            }
-
-            var identity = new ClaimsIdentity(claims, Scheme.Name);
-            var principal = new ClaimsPrincipal(identity);
-            var ticket = new AuthenticationTicket(principal, Scheme.Name);
-
-            return Task.FromResult(
-                AuthenticateResult.Success(ticket));
+            rawJwt = _tokenEncryptionService.Decrypt(encryptedToken);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Authentication failed");
-            return Task.FromResult(
-                AuthenticateResult.Fail("Invalid token"));
+            Logger.LogWarning(ex, "CustomTokenScheme: failed to decrypt bearer token.");
+            return Task.FromResult(AuthenticateResult.Fail("Invalid token."));
         }
-    }
 
-    protected override Task HandleChallengeAsync(
-        AuthenticationProperties properties)
-    {
-        Response.StatusCode = StatusCodes.Status401Unauthorized;
-        Response.ContentType = "application/json";
+        var jwtSettings = _configuration.GetSection("Jwt");
+        var keyVal = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key not configured.");
 
-        return Response.WriteAsync(JsonSerializer.Serialize(new
+        var validationParameters = new TokenValidationParameters
         {
-            Status = "Unauthorized",
-            Message = "Your Session Expired Please Login and Try Again."
-        }));
-    }
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyVal)),
+        };
 
-    protected override Task HandleForbiddenAsync(
-        AuthenticationProperties properties)
-    {
-        Response.StatusCode = StatusCodes.Status403Forbidden;
-        Response.ContentType = "application/json";
-
-        return Response.WriteAsync(JsonSerializer.Serialize(new
+        try
         {
-            Status = "Forbidden",
-            Message = "You do not have permission to access this resource"
-        }));
-    }
-
-    private static string Base64UrlDecode(string input)
-    {
-        string base64 = input.Replace('-', '+').Replace('_', '/');
-        switch (base64.Length % 4)
-        {
-            case 2: base64 += "=="; break;
-            case 3: base64 += "="; break;
+            var handler = new JwtSecurityTokenHandler();
+            var principal = handler.ValidateToken(rawJwt, validationParameters, out _);
+            var ticket = new AuthenticationTicket(principal, Scheme.Name);
+            return Task.FromResult(AuthenticateResult.Success(ticket));
         }
-        return Encoding.UTF8.GetString(Convert.FromBase64String(base64));
-    }
-
-    private static string DecryptToken(string token, string encryptionKey)
-    {
-        byte[] fullCipher = Convert.FromBase64String(token);
-
-        using var aes = Aes.Create();
-        aes.Key = Encoding.UTF8.GetBytes(
-            encryptionKey.PadRight(32).Substring(0, 32));
-
-        byte[] iv = new byte[aes.BlockSize / 8];
-        byte[] cipher = new byte[fullCipher.Length - iv.Length];
-
-        Buffer.BlockCopy(fullCipher, 0, iv, 0, iv.Length);
-        Buffer.BlockCopy(fullCipher, iv.Length, cipher, 0, cipher.Length);
-
-        aes.IV = iv;
-
-        using var decryptor = aes.CreateDecryptor();
-        byte[] decryptedBytes =
-            decryptor.TransformFinalBlock(cipher, 0, cipher.Length);
-
-        return Encoding.UTF8.GetString(decryptedBytes);
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "CustomTokenScheme: decrypted token failed JWT validation.");
+            return Task.FromResult(AuthenticateResult.Fail("Invalid or expired token."));
+        }
     }
 }

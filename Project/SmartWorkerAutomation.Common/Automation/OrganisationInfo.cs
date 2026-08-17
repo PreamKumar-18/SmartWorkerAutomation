@@ -12,4 +12,5 @@ public class OrganisationInfo
     public string ConnectionString { get; set; } = string.Empty; // encrypted at rest
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public string? WebhookPhoneNumber { get; set; }
 }

@@ -1,7 +1,8 @@
-using System.Threading.Tasks;
-using SmartWorkerAutomation.Common.Automation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SmartWorkerAutomation.Common.Automation;
 using SmartWorkerAutomation.DataProvider.Automation;
+using System.Threading.Tasks;
 
 namespace SmartWorkerAutomation.API.Controllers;
 
@@ -16,6 +17,7 @@ namespace SmartWorkerAutomation.API.Controllers;
 /// be locked down beyond network-level access, add a shared-secret header
 /// check here before wiring n8n's HTTP nodes to it.
 /// </summary>
+[Authorize(AuthenticationSchemes = "CustomTokenScheme")]
 [ApiController]
 [Route("api/[controller]")]
 public class NotificationsController : ControllerBase

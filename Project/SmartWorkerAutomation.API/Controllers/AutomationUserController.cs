@@ -100,7 +100,7 @@ public class UserController : ControllerBase
     /// Authenticated user-management list - Admin/SuperAdmin only. Backs the
     /// user-management screen's user table.
     /// </summary>
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "CustomTokenScheme")]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -130,7 +130,7 @@ public class UserController : ControllerBase
     /// can only create 'User' accounts (see UserService.CreateUserAsync).
     /// </summary>
     /// 
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "CustomTokenScheme")]
     [HttpPost("create")]
     public async Task<IActionResult> Create([FromBody] RegisterRequest request)
     {
@@ -183,7 +183,7 @@ public class UserController : ControllerBase
     //    return Ok(response);
     //}
 
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "CustomTokenScheme")]
     [HttpPost("changePassword")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
@@ -229,7 +229,7 @@ public class UserController : ControllerBase
     /// login (web or mobile). userId is read from the JWT, not the request
     /// body, so callers can only register devices against their own account.
     /// </summary>
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "CustomTokenScheme")]
     [HttpPost("register-device")]
     public async Task<IActionResult> RegisterDevice([FromBody] RegisterDeviceRequest request)
     {
