@@ -19,7 +19,7 @@ namespace SmartWorkerAutomation.API.Controllers;
 /// pair isn't already in customer_enquiries - see
 /// CustomerEnquiryImportService for the exact duplicate-skip rule.
 /// </summary>
-[Authorize]
+[Authorize(AuthenticationSchemes = "CustomTokenScheme")]
 [ApiController]
 [Route("api/[controller]")]
 public class CustomerEnquiryImportController : ControllerBase

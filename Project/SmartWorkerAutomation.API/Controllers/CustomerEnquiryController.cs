@@ -14,7 +14,8 @@ namespace SmartWorkerAutomation.API.Controllers;
 /// /customer-enquiries route - insert/update/select + active/inactive
 /// toggle only, deliberately no email/WhatsApp send endpoints here.
 /// </summary>
-[Authorize]
+
+[Authorize(AuthenticationSchemes = "CustomTokenScheme")]
 [ApiController]
 [Route("api/[controller]")]
 public class CustomerEnquiryController : ControllerBase
