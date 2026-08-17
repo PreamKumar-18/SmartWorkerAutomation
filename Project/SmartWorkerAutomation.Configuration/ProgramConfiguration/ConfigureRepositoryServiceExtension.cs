@@ -56,6 +56,8 @@ public static class ConfigureRepositoryServiceExtension
         services.AddScoped<IWhatsAppInboundService, WhatsAppInboundService>();
         //services.AddScoped<ITenantResolverService, TenantResolverService>();
         services.AddScoped<IOrganisationOnboardingService, OrganisationOnboardingService>();
+        services.AddScoped<ICustomerEnquiryService, CustomerEnquiryService>();
+        services.AddScoped<ICustomerEnquiryImportService, CustomerEnquiryImportService>();
 
         services.AddHttpClient<N8nIngestionClient>();
         services.AddHttpClient<IWhatsAppService, WhatsAppService>();
