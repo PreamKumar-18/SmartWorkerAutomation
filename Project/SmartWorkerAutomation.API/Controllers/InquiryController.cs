@@ -38,6 +38,11 @@ public class InquiryController : ControllerBase
             bool isSuperAdmin = User.IsInRole("SuperAdmin")
                                 || string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
 
+            var categoriesClaim = User.FindFirst("categories")?.Value;
+            var allowedCategories = string.IsNullOrEmpty(categoriesClaim)
+                ? null
+                : categoriesClaim.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
             var data = await _inquiryService.GetInquiryDataAsync(category, userIdClaim ?? string.Empty, isSuperAdmin);
             return Ok(data);
         }
