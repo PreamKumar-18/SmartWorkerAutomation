@@ -87,7 +87,7 @@ public class DailyAutomationRefreshService : BackgroundService
         {
             var delay = GetDelayUntilNextRun(DateTimeOffset.UtcNow);
             _logger.LogInformation(
-                "WF: Daily Refresh Automation Records (5AM) - next run in {Delay} (around {NextRunUtc:u} UTC).",
+                "WF: Daily Refresh Automation Records (12.15 AM) - next run in {Delay} (around {NextRunUtc:u} UTC).",
                 delay,
                 DateTimeOffset.UtcNow.Add(delay));
 
@@ -124,13 +124,13 @@ public class DailyAutomationRefreshService : BackgroundService
                 using var connection = new NpgsqlConnection(decrypted);
                 var sql = _queryStore.Get("Automation:DailyRefresh");
                 await connection.ExecuteAsync(sql);
-                _logger.LogInformation("WF: Daily Refresh Automation Records (5AM) completed for orgid {OrgId}.", tenant.OrgId);
+                _logger.LogInformation("WF: Daily Refresh Automation Records (12.15 AM) completed for orgid {OrgId}.", tenant.OrgId);
             }
             catch (Exception ex)
             {
                 // One tenant's failure (bad connection string, DB down,
                 // etc.) must not stop the refresh for every other tenant.
-                _logger.LogError(ex, "WF: Daily Refresh Automation Records (5AM) failed for orgid {OrgId}.", tenant.OrgId);
+                _logger.LogError(ex, "WF: Daily Refresh Automation Records (12.15 AM) failed for orgid {OrgId}.", tenant.OrgId);
             }
         }
     }

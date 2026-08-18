@@ -1,5 +1,6 @@
 using Dapper;
 using Npgsql;
+using SixLabors.ImageSharp;
 using SmartWorkerAutomation.Common.Automation;
 using SmartWorkerAutomation.Core.Repository.Automation;
 using SmartWorkerAutomation.Core.Security;
@@ -61,21 +62,33 @@ public class ReminderSendBackgroundService : BackgroundService
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan BetweenRecordsDelay = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan DefaultStartTime = new(9, 0, 0);
+    private static readonly TimeSpan DefaultEndTime = new(18, 0, 0);
+    private static readonly HashSet<DayOfWeek> DefaultActiveDays =
+        new() { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday };
+
 
     private readonly IQueryStore _queryStore;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<ReminderSendBackgroundService> _logger;
     private readonly ConnectionStringEncryptor _encryptor;
+    private readonly TimeZoneInfo _istZone;
+    private readonly TimeSpan _windowStart;
+    private readonly TimeSpan _windowEnd;
+    private readonly HashSet<DayOfWeek> _activeDays;
 
     public ReminderSendBackgroundService(
         IQueryStore queryStore,
         IServiceScopeFactory scopeFactory,
-        ILogger<ReminderSendBackgroundService> logger, ConnectionStringEncryptor encryptor)
+        ILogger<ReminderSendBackgroundService> logger, ConnectionStringEncryptor encryptor, IConfiguration configuration)
     {
         _queryStore = queryStore;
         _scopeFactory = scopeFactory;
         _logger = logger;
         _encryptor = encryptor;
+        _windowStart = ResolveTime(configuration, "Automation:ReminderSendWindow:StartTimeIst", DefaultStartTime, logger);
+        _windowEnd = ResolveTime(configuration, "Automation:ReminderSendWindow:EndTimeIst", DefaultEndTime, logger);
+        _activeDays = ResolveActiveDays(configuration, logger);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -84,7 +97,16 @@ public class ReminderSendBackgroundService : BackgroundService
         {
             try
             {
-                await RunPollCycleAsync(stoppingToken);
+                if (IsWithinSendWindow(DateTimeOffset.UtcNow))
+                {
+                    await RunPollCycleAsync(stoppingToken);
+                }
+                else
+                {
+                    _logger.LogInformation(
+                        "WF: Reminder Send (Automation) - outside configured send window ({Start}-{End} IST, {Days}); skipping this cycle.",
+                        _windowStart, _windowEnd, string.Join(",", _activeDays));
+                }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -230,6 +252,60 @@ public class ReminderSendBackgroundService : BackgroundService
             results.Count,
             results.Count(r => r.EmailStatus == "sent"),
             results.Count(r => r.WhatsappStatus == "sent"));
+    }
+
+    private bool IsWithinSendWindow(DateTimeOffset nowUtc)
+    {
+        var nowIst = TimeZoneInfo.ConvertTime(nowUtc, _istZone);
+
+        if (!_activeDays.Contains(nowIst.DayOfWeek))
+        {
+            return false;
+        }
+
+        var timeOfDay = nowIst.TimeOfDay;
+        return timeOfDay >= _windowStart && timeOfDay < _windowEnd;
+    }
+
+    private static TimeSpan ResolveTime(IConfiguration configuration, string key, TimeSpan fallback, ILogger logger)
+    {
+        var configured = configuration[key];
+        if (string.IsNullOrWhiteSpace(configured))
+        {
+            return fallback;
+        }
+
+        if (TimeSpan.TryParse(configured, out var parsed) && parsed >= TimeSpan.Zero && parsed < TimeSpan.FromDays(1))
+        {
+            return parsed;
+        }
+
+        logger.LogWarning("{Key} value '{Configured}' is not a valid time (expected HH:mm:ss) - falling back to {Fallback}.", key, configured, fallback);
+        return fallback;
+    }
+
+    private static HashSet<DayOfWeek> ResolveActiveDays(IConfiguration configuration, ILogger logger)
+    {
+        var configuredDays = configuration.GetSection("Automation:ReminderSendWindow:ActiveDays").Get<string[]>();
+        if (configuredDays is null || configuredDays.Length == 0)
+        {
+            return DefaultActiveDays;
+        }
+
+        var parsed = new HashSet<DayOfWeek>();
+        foreach (var day in configuredDays)
+        {
+            if (Enum.TryParse<DayOfWeek>(day, ignoreCase: true, out var dayOfWeek))
+            {
+                parsed.Add(dayOfWeek);
+            }
+            else
+            {
+                logger.LogWarning("Automation:ReminderSendWindow:ActiveDays contains an unrecognized day '{Day}' - ignoring it.", day);
+            }
+        }
+
+        return parsed.Count > 0 ? parsed : DefaultActiveDays;
     }
 
     //private async Task RunPollCycleAsync(CancellationToken stoppingToken)
