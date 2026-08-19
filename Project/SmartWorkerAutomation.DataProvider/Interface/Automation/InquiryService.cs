@@ -130,7 +130,7 @@ public class InquiryService : IInquiryService
                 throw new UnauthorizedAccessException("Invalid user ID in token.");
             }
 
-            var sql = _queryStore.Render(queryKey, new Dictionary<string, string> { ["ViewName"] = viewName });
+            var sql = _queryStore.Render("Inquiry:GetByUser", new Dictionary<string, string> { ["ViewName"] = viewName });
             return await connection.QueryAsync(sql, new { UserId = userId });
         }
     }
