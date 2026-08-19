@@ -26,9 +26,13 @@ public class InquiryService : IInquiryService
     /// this backend.
     /// </summary>
     private static readonly Dictionary<string, string> PhoneFieldByCategory = new(StringComparer.OrdinalIgnoreCase)
-    {
-        { "finance", "client_phone" },
-    };
+{
+    { "finance", "client_phone" },
+    { "purchase", "supplier_phone" },
+    { "inventory", "procurement_phone" },
+    { "dispatch", "customer_phone" },
+    { "production", "supervisor_phone" },
+};
 
     private static readonly Dictionary<string, string> CategoryToViewMap = new(StringComparer.OrdinalIgnoreCase)
     {
