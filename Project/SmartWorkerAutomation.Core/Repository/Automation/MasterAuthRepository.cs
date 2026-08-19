@@ -94,5 +94,11 @@ public class MasterAuthRepository : IMasterAuthRepository
         var query = _queryStore.Get("MasterAuth:UpdateEmailAndUsername");
         await connection.ExecuteAsync(query, new { Id = masterUserId, Email = email, Username = username });
     }
-
+    public async Task<bool> IsSuperAdminByEmailAsync(string email)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var query = _queryStore.Get("MasterAuth:GetRoleNameByEmail");
+        var roleName = await connection.QuerySingleOrDefaultAsync<string>(query, new { Email = email });
+        return string.Equals(roleName, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+    }
 }

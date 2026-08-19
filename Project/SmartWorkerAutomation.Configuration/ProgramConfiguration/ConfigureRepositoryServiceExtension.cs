@@ -40,6 +40,7 @@ public static class ConfigureRepositoryServiceExtension
         services.AddScoped<IMasterAuthRepository, MasterAuthRepository>();
         services.AddScoped<ITenantResolverService, TenantResolverService>();
         services.AddSingleton<ITokenEncryptionService, TokenEncryptionService>();
+        services.AddScoped<IBranchService, BranchService>();
 
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ITokenService, TokenService>();
