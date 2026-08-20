@@ -1,12 +1,13 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using SmartWorkerAutomation.Common.Automation;
+using SmartWorkerAutomation.DataProvider.Interface.Automation;
+using SmartWorkerAutomation.DataProvider.Service.Automation;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using SmartWorkerAutomation.Common.Automation;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using SmartWorkerAutomation.DataProvider.Interface.Automation;
 
 namespace SmartWorkerAutomation.DataProvider.Automation;
 
@@ -21,7 +22,7 @@ public class TokenService : ITokenService
         _tokenEncryptionService = tokenEncryptionService;
     }
 
-    public string GenerateToken(User user, UserInfo masterUserInfo)
+    public string GenerateToken(User user, UserInfo masterUserInfo, IEnumerable<UserBranchSummary>? branches)
     {
         var jwtSettings = _configuration.GetSection("Jwt");
         var keyVal = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key not configured.");
@@ -37,8 +38,8 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
-            new Claim(ClaimTypes.Role, masterUserInfo.RoleName),
-            new Claim("accesstype", masterUserInfo.AccessTypeName),
+            new Claim(ClaimTypes.Role, user.RoleName),
+            //new Claim("accesstype", user.AccessTypeName),
             new Claim("orgid", masterUserInfo.OrgId.ToString())
         };
 
@@ -46,7 +47,17 @@ public class TokenService : ITokenService
         {
             claims.Add(new Claim("categories", string.Join(",", user.AllowedCategories)));
         }
+        if (branches is not null)
+        {
+            var branchList = branches.ToList();
+            if (branchList.Count > 0)
+            {
+                claims.Add(new Claim("branchids", string.Join(",", branchList.Select(b => b.BranchId))));
 
+                var primary = branchList.FirstOrDefault(b => b.IsPrimary) ?? branchList.First();
+                claims.Add(new Claim("primarybranchid", primary.BranchId.ToString()));
+            }
+        }
         var token = new JwtSecurityToken(
             issuer: issuer,
             audience: audience,

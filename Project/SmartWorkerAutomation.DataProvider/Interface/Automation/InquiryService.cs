@@ -102,7 +102,7 @@ public class InquiryService : IInquiryService
         _pushService = pushService;
     }
 
-    public async Task<IEnumerable<dynamic>> GetInquiryDataAsync(string category, string userIdClaim, bool isSuperAdmin)
+    public async Task<IEnumerable<dynamic>> GetInquiryDataAsync(string category, string userIdClaim, bool isSuperAdmin, int[]? branchIds)
     {
         if (string.IsNullOrWhiteSpace(category))
         {
@@ -116,10 +116,11 @@ public class InquiryService : IInquiryService
 
         using var connection = _connectionFactory.CreateConnection();
         bool isPurchase = category.Trim() == "purchase";
-        string queryKey = isPurchase ? "Inquiry:GetAllWithJoin" : "Inquiry:GetAll";
+        
 
         if (isSuperAdmin || GlobalCategories.Contains(category.Trim()))
         {
+            string queryKey = isPurchase ? "Inquiry:GetAllWithJoin" : "Inquiry:GetAll";
             var sql = _queryStore.Render(queryKey, new Dictionary<string, string> { ["ViewName"] = viewName });
             return await connection.QueryAsync(sql);
         }
@@ -129,9 +130,17 @@ public class InquiryService : IInquiryService
             {
                 throw new UnauthorizedAccessException("Invalid user ID in token.");
             }
+            if (branchIds is null || branchIds.Length == 0)
+            {
+                // No branches mapped to this user at all - correctly see
+                // nothing, rather than silently falling through to
+                // unfiltered/all data.
+                return Enumerable.Empty<dynamic>();
+            }
 
-            var sql = _queryStore.Render("Inquiry:GetByUser", new Dictionary<string, string> { ["ViewName"] = viewName });
-            return await connection.QueryAsync(sql, new { UserId = userId });
+            var queryKey = isPurchase ? "Inquiry:GetAllWithJoinByBranch" : "Inquiry:GetAllByBranch";
+            var sql = _queryStore.Render(queryKey, new Dictionary<string, string> { ["ViewName"] = viewName });
+            return await connection.QueryAsync(sql, new { BranchIds = branchIds });
         }
     }
 

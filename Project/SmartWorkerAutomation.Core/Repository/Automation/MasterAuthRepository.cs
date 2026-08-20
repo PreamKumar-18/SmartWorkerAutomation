@@ -66,7 +66,7 @@ public class MasterAuthRepository : IMasterAuthRepository
         });
     }
 
-    public async Task<int> InsertUserInfoAsync(int orgId, string username, string email, string passwordHash, int roleId, int accessTypeId, string[]? allowedCategories)
+    public async Task<int> InsertUserInfoAsync(int orgId, string username, string email, string passwordHash, string[]? allowedCategories)
     {
         using var connection = _connectionFactory.CreateConnection();
         var query = _queryStore.Get("MasterAuth:InsertUserInfo");
@@ -76,8 +76,6 @@ public class MasterAuthRepository : IMasterAuthRepository
             Username = username,
             Email = email,
             PasswordHash = passwordHash,
-            RoleId = roleId,
-            AccessTypeId = accessTypeId,
             AllowedCategories = allowedCategories
         });
     }

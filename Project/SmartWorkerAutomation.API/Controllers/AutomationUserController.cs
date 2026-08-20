@@ -50,10 +50,10 @@ public class UserController : ControllerBase
         }
 
         // TODO: replace with real seeded ids once confirmed (see UserController.Create)
-        var roleId = request.RoleId > 0 ? request.RoleId : 3;
-        var accessTypeId = request.AccessTypeId > 0 ? request.AccessTypeId : 1;
+        var roleId = request.UserTypeId > 0 ? request.UserTypeId : 3;
+       // var accessTypeId = request.AccessTypeId > 0 ? request.AccessTypeId : 1;
 
-        var response = await _userService.RegisterAsync(request, request.OrgId, roleId, accessTypeId);
+        var response = await _userService.RegisterAsync(request, request.OrgId, roleId);
         if (!response.Success)
         {
             return BadRequest(response);
@@ -153,10 +153,10 @@ public class UserController : ControllerBase
         // (SuperAdmin=1, Admin=2, User=3). Ideally these come from the request
         // body (request.RoleId/request.AccessTypeId) once RegisterRequest has
         // those fields, not hardcoded here.
-        var roleId = request.RoleId > 0 ? request.RoleId : 3;
-        var accessTypeId = request.AccessTypeId > 0 ? request.AccessTypeId : 1;
+        var roleId = request.UserTypeId > 0 ? request.UserTypeId : 3;
+        //var accessTypeId = request.AccessTypeId > 0 ? request.AccessTypeId : 1;
 
-        var response = await _userService.CreateUserAsync(request, creatorRoleName, creatorOrgId, roleId, accessTypeId);
+        var response = await _userService.CreateUserAsync(request, creatorRoleName, creatorOrgId, roleId);
         if (!response.Success)
         {
             return BadRequest(response);

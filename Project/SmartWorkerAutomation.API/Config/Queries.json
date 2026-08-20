@@ -131,7 +131,9 @@
       "UpdatePurchaseMaterialStatus": "SELECT update_purchase_material_status(@p_id, @p_status, @p_userid, @p_is_superadmin)",
       "UpdatePromiseToPay": "SELECT update_promise_to_pay(@p_id, @p_promised_amount, @p_promised_by, @p_userid, @p_is_superadmin)",
       "GetAllWithJoin": "SELECT pv.*,rc.rule_name FROM public.purchase_view pv LEFT JOIN rule_configuration_view rc ON pv.matchingruleid = rc.id;",
-      "GetUserDeviceForCall": "SELECT platform, push_token FROM user_device WHERE user_id = @UserId AND push_token IS NOT NULL ORDER BY last_login_at DESC LIMIT 1"
+      "GetUserDeviceForCall": "SELECT platform, push_token FROM user_device WHERE user_id = @UserId AND push_token IS NOT NULL ORDER BY last_login_at DESC LIMIT 1",
+      "GetAllWithJoinByBranch": "SELECT pv.*, rc.rule_name FROM public.purchase_view pv LEFT JOIN rule_configuration_view rc ON pv.matchingruleid = rc.id WHERE pv.branch_id = ANY(@BranchIds)",
+      "GetAllByBranch": "SELECT * FROM public.{ViewName} WHERE branch_id = ANY(@BranchIds) AND userid = @UserId ORDER BY 1 DESC"
     },
 
     "Configuration": {
@@ -225,17 +227,18 @@
 
     "MasterAuth": {
       "_comment": "Master/control DB only - organisation, userinfo, organisationinfo. Never run against a tenant SmartWorkerConnection. Aliases are plain lowercase (no quotes needed) - Dapper's default mapping is case-insensitive so orgid binds to OrgId, passwordhash binds to PasswordHash, etc.",
-      "GetUserByEmail": "SELECT u.id, u.orgid, u.username, u.email, u.password_hash AS passwordhash, u.roleid, r.role_name AS rolename, u.accesstype AS accesstypeid, a.access_name AS accesstypename, u.allowedcategories, u.status, u.created_at AS createdat, u.updated_at AS updatedat FROM userinfo u JOIN userrole r ON r.id = u.roleid JOIN useraccesstype a ON a.id = u.accesstype WHERE u.email = @Email AND u.status = true",
+      "GetUserByEmail": "SELECT id, orgid, username, email, password_hash AS passwordhash, allowedcategories, status, created_at AS createdat, updated_at AS updatedat FROM userinfo WHERE email = @Email AND status = true",
       "GetOrganisationById": "SELECT id, name, company_details AS companydetails, status, created_at AS createdat, updated_at AS updatedat FROM organisation WHERE id = @OrgId AND status = true",
       "GetOrganisationInfoByOrgId": "SELECT id, orgid, db_name AS dbname, connectionstring, created_at AS createdat, updated_at AS updatedat FROM organisationinfo WHERE orgid = @OrgId",
       "GetAllActiveTenantConnections": "SELECT oi.orgid AS orgid, oi.connectionstring AS encryptedconnectionstring FROM organisationinfo oi JOIN organisation o ON o.id = oi.orgid WHERE o.status = true",
       "InsertOrganisation": "INSERT INTO organisation (name, company_details, status) VALUES (@Name, @CompanyDetails::jsonb, true) RETURNING id",
       "InsertOrganisationInfo": "INSERT INTO organisationinfo (orgid, db_name, connectionstring, webhookphonenumber) VALUES (@OrgId, @DbName, @EncryptedConnectionString, @WebhookPhoneNumber) RETURNING id",
-      "InsertUserInfo": "INSERT INTO userinfo (orgid, username, email, password_hash, roleid, accesstype, allowedcategories, status) VALUES (@OrgId, @Username, @Email, @PasswordHash, @RoleId, @AccessTypeId, @AllowedCategories, true) RETURNING id",
+      "InsertUserInfo": "INSERT INTO userinfo (orgid, username, email, password_hash, allowedcategories, status) VALUES (@OrgId, @Username, @Email, @PasswordHash, @AllowedCategories, true) RETURNING id",
       "UpdatePassword": "UPDATE userinfo SET password_hash = @PasswordHash, updated_at = now() WHERE id = @Id",
       "UpdateEmailAndUsername": "UPDATE userinfo SET email = @Email, username = @Username, updated_at = now() WHERE id = @Id",
       "GetRoleNameByOrgAndUserId": "SELECT r.role_name FROM userinfo u JOIN userrole r ON r.id = u.roleid WHERE u.orgid = @OrgId AND u.id = @MasterUserId",
-      "GetRoleNameByEmail": "SELECT r.role_name FROM userinfo u JOIN userrole r ON r.id = u.roleid WHERE u.email = @Email AND u.status = true"
+      "GetRoleNameByEmail": "SELECT r.role_name FROM userinfo u JOIN userrole r ON r.id = u.roleid WHERE u.email = @Email AND u.status = true",
+      "InsertUserBranch": "INSERT INTO user_branch (\"UserId\", branch_id, is_primary) VALUES (@UserId, @BranchId, @IsPrimary) ON CONFLICT (\"UserId\", branch_id) DO NOTHING"
     },
     "Branch": {
       "GetBranchesForUser": "SELECT b.id AS branchid, b.branch_code AS branchcode, b.branch_name AS branchname, ub.is_primary AS isprimary FROM user_branch ub JOIN branch b ON b.id = ub.branch_id WHERE ub.\"UserId\" = @UserId AND b.is_active = true ORDER BY ub.is_primary DESC, b.branch_name",

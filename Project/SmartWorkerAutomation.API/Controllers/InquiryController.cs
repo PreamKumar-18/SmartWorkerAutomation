@@ -43,7 +43,12 @@ public class InquiryController : ControllerBase
                 ? null
                 : categoriesClaim.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
-            var data = await _inquiryService.GetInquiryDataAsync(category, userIdClaim ?? string.Empty, isSuperAdmin);
+            var branchIdsClaim = User.FindFirst("branchids")?.Value;
+            var branchIds = string.IsNullOrEmpty(branchIdsClaim)
+                ? null
+                : branchIdsClaim.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
+
+            var data = await _inquiryService.GetInquiryDataAsync(category, userIdClaim ?? string.Empty, isSuperAdmin, branchIds);
             return Ok(data);
         }
         catch (ArgumentException ex)
@@ -130,7 +135,12 @@ public class InquiryController : ControllerBase
 
             var allowedCategories = GetAllowedCategories();
 
-            var fileBytes = await _exportService.ExportAllToExcelAsync(userIdClaim ?? string.Empty, isSuperAdmin, allowedCategories);
+            var branchIdsClaim = User.FindFirst("branchids")?.Value;
+            var branchIds = string.IsNullOrEmpty(branchIdsClaim)
+                ? null
+                : branchIdsClaim.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
+
+            var fileBytes = await _exportService.ExportAllToExcelAsync(userIdClaim ?? string.Empty, isSuperAdmin, allowedCategories,branchIds);
             var fileName = $"records-export-{DateTime.UtcNow:yyyy-MM-dd}.xlsx";
 
             return File(

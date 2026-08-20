@@ -14,8 +14,11 @@ public class RegisterRequest
     /// </summary>
     public string[]? AllowedCategories { get; set; }
 
-    public int RoleId { get; set; }
-    public int AccessTypeId { get; set; }
+    //public int RoleId { get; set; }
+    //public int AccessTypeId { get; set; }
 
     public int OrgId { get; set; }
+
+    public int[]? BranchIds { get; set; }      // NEW
+    public int? PrimaryBranchId { get; set; }
 }

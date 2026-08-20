@@ -21,7 +21,7 @@ public interface IRecordsExportService
     /// name ("status" -&gt; {category}_status, "record_type" -&gt;
     /// {category}_type - see RecordsExportService's resolver).
     /// </summary>
-    Task<byte[]> ExportToExcelAsync(string category, string userIdClaim, bool isSuperAdmin);
+    Task<byte[]> ExportToExcelAsync(string category, string userIdClaim, bool isSuperAdmin, int[]? branchIds);
 
     /// <summary>
     /// One workbook, one worksheet per category (named after the category)
@@ -29,5 +29,5 @@ public interface IRecordsExportService
     /// <paramref name="allowedCategories"/> if given (null = unrestricted).
     /// Backs the Records page's Download button.
     /// </summary>
-    Task<byte[]> ExportAllToExcelAsync(string userIdClaim, bool isSuperAdmin, IReadOnlyCollection<string>? allowedCategories);
+    Task<byte[]> ExportAllToExcelAsync(string userIdClaim, bool isSuperAdmin, IReadOnlyCollection<string>? allowedCategories, int[]? branchIds);
 }

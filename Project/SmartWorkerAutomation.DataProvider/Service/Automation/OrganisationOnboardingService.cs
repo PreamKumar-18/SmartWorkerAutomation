@@ -75,8 +75,7 @@ public class OrganisationOnboardingService : IOrganisationOnboardingService
         try
         {
             await _masterAuthRepository.InsertUserInfoAsync(
-    orgId, request.AdminUsername, request.AdminEmail, passwordHash,
-    request.RoleId, request.AccessTypeId, request.AdminAllowedCategories);
+    orgId, request.AdminUsername, request.AdminEmail, passwordHash, request.AdminAllowedCategories);
         }
         catch (Exception ex)
         {
@@ -98,7 +97,7 @@ public class OrganisationOnboardingService : IOrganisationOnboardingService
                 p_username = request.AdminUsername,
                 p_password = passwordHash,
                 p_redirecturl = (string?)null,
-                p_usertypeid = request.RoleId, 
+                p_usertypeid = 1, 
                 p_createdby = "System",
             });
         }
