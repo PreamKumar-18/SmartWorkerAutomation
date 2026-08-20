@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace SmartWorkerAutomation.DataProvider.Service.Automation;
+namespace SmartWorkerAutomation.Common.Automation;
 
 public class UserBranchSummary
 {

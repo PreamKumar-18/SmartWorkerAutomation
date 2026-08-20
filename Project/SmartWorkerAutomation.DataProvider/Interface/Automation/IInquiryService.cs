@@ -8,7 +8,7 @@ namespace SmartWorkerAutomation.DataProvider.Automation;
 
 public interface IInquiryService
 {
-    Task<IEnumerable<dynamic>> GetInquiryDataAsync(string category, string userIdClaim, bool isSuperAdmin);
+    Task<IEnumerable<dynamic>> GetInquiryDataAsync(string category, string userIdClaim, bool isSuperAdmin, int[]? branchIds);
 
     /// <summary>
     /// Single-record read, straight from the same category view

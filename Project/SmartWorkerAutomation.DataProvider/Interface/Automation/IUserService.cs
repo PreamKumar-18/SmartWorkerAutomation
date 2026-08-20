@@ -15,8 +15,8 @@ public interface IUserService
     /// </summary>
     //Task<AuthResponse> CreateUserAsync(RegisterRequest request, string creatorRoleName);
 
-    Task<AuthResponse> RegisterAsync(RegisterRequest request, int orgId, int roleId, int accessTypeId);
-    Task<AuthResponse> CreateUserAsync(RegisterRequest request, string creatorRoleName, int creatorOrgId, int roleId, int accessTypeId);
+    Task<AuthResponse> RegisterAsync(RegisterRequest request, int orgId, int roleId);
+    Task<AuthResponse> CreateUserAsync(RegisterRequest request, string creatorRoleName, int creatorOrgId, int roleId);
     Task<AuthResponse> LoginAsync(LoginRequest request);
     Task<AuthResponse> UpdateUserAsync(UpdateUserRequest request);
     Task<AuthResponse> ChangePasswordAsync(ChangePasswordRequest request, int orgId);

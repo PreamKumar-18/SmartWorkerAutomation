@@ -1,4 +1,4 @@
-﻿using SmartWorkerAutomation.DataProvider.Service.Automation;
+﻿using SmartWorkerAutomation.Common.Automation;
 using System;
 using System.Collections.Generic;
 using System.Text;

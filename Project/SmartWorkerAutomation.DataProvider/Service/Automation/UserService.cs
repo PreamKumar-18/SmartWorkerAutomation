@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using SmartWorkerAutomation.Common.Automation;
 using SmartWorkerAutomation.Core.Repository.Automation;
+using SmartWorkerAutomation.DataProvider.Service.Automation;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -157,12 +158,19 @@ public class UserService : IUserService
             return new AuthResponse { Success = false, Message = "User account is not fully provisioned. Contact support." };
         }
 
+        // NEW - fetch this user's branch access (or all branches, if SuperAdmin)
+        bool isSuperAdmin = string.Equals(tenantContext.User.RoleName, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+        var branchQueryKey = isSuperAdmin ? "Branch:GetAllActiveBranches" : "Branch:GetBranchesForUser";
+        var branchSql = _queryStore.Get(branchQueryKey);
+        var branches = await tenantConnection.QueryAsync<UserBranchSummary>(branchSql, new { UserId = tenantUser.UserId });
+
         tenantUser.Password = string.Empty;
-        var token = _tokenService.GenerateToken(tenantUser, tenantContext.User);
-        return new AuthResponse { Success = true, Message = "Login successful.", User = tenantUser, Token = token };
+        var token = _tokenService.GenerateToken(tenantUser, tenantContext.User, branches);
+
+        return new AuthResponse { Success = true, Message = "Login successful.", User = tenantUser, Token = token, Branches = branches.ToList() };
     }
 
-    public async Task<AuthResponse> RegisterAsync(RegisterRequest request, int orgId, int roleId, int accessTypeId)
+    public async Task<AuthResponse> RegisterAsync(RegisterRequest request, int orgId, int roleId)
     {
         // 1. Resolve the tenant connection for this org
         var tenantConnectionString = await _tenantResolverService.GetTenantConnectionStringAsync(orgId);
@@ -206,7 +214,7 @@ public class UserService : IUserService
         try
         {
             masterUserId = await _masterAuthRepository.InsertUserInfoAsync(
-                orgId, request.Username, request.Email, hashedPassword, roleId, accessTypeId, request.AllowedCategories);
+                orgId, request.Username, request.Email, hashedPassword, request.AllowedCategories);
         }
         catch (Exception ex)
         {
@@ -241,6 +249,34 @@ public class UserService : IUserService
             });
             user.UserId = tenantUserId;
 
+            if (request.BranchIds is { Length: > 0 })
+            {
+                var insertBranchSql = _queryStore.Get("User:InsertUserBranch");
+                foreach (var branchId in request.BranchIds.Distinct())
+                {
+                    var isPrimary = request.PrimaryBranchId.HasValue
+                        ? branchId == request.PrimaryBranchId.Value
+                        : branchId == request.BranchIds[0]; // default to first if no explicit primary given
+
+                    try
+                    {
+                        await tenantConnection.ExecuteAsync(insertBranchSql, new { UserId = user.UserId, BranchId = branchId, IsPrimary = isPrimary });
+                    }
+                    catch (Exception ex)
+                    {
+                        // A bad branchId (doesn't exist in THIS org's branch table)
+                        // shouldn't fail the whole user creation - log and continue,
+                        // same "best-effort secondary write" pattern used elsewhere
+                        // (e.g. FinalizeAsync in ReminderSendBackgroundService).
+                        return new AuthResponse
+                        {
+                            Success = false,
+                            Message = $"Failed to map userid {user.UserId} to branchid {branchId}. Ex: {ex.Message}"
+                        };
+                    }
+                }
+            }
+
             if (user.UserTypeId == UserTypeIds.User && request.AllowedCategories is { Length: > 0 })
             {
                 await _userRepository.UpdateAllowedCategoriesAsync(user.UserId, request.AllowedCategories);
@@ -261,7 +297,7 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<AuthResponse> CreateUserAsync(RegisterRequest request, string creatorRoleName, int creatorOrgId, int roleId, int accessTypeId)
+    public async Task<AuthResponse> CreateUserAsync(RegisterRequest request, string creatorRoleName, int creatorOrgId, int roleId)
     {
         bool creatorIsSuperAdmin = string.Equals(creatorRoleName, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
         bool creatorIsAdmin = string.Equals(creatorRoleName, "Admin", StringComparison.OrdinalIgnoreCase);
@@ -278,7 +314,7 @@ public class UserService : IUserService
 
         // New user is always created under the CREATOR's own org - an Admin
         // can never create a user in a different organisation.
-        return await RegisterAsync(request, creatorOrgId, roleId, accessTypeId);
+        return await RegisterAsync(request, creatorOrgId, roleId);
     }
     //public async Task<AuthResponse> UpdateUserAsync(UpdateUserRequest request)
     //{

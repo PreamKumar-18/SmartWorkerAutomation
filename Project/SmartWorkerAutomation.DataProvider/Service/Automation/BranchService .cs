@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using SmartWorkerAutomation.Common.Automation;
 using SmartWorkerAutomation.Core.Repository.Automation;
 using SmartWorkerAutomation.DataProvider.Interface.Automation;
 using System;

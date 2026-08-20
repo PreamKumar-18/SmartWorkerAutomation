@@ -15,7 +15,7 @@ public interface IMasterAuthRepository
 
     Task<int> InsertOrganisationAsync(string name, string? companyDetailsJson);
     Task<int> InsertOrganisationInfoAsync(int orgId, string dbName, string encryptedConnectionString, string? webhookPhoneNumber);
-    Task<int> InsertUserInfoAsync(int orgId, string username, string email, string passwordHash, int roleId, int accessTypeId, string[]? allowedCategories);
+    Task<int> InsertUserInfoAsync(int orgId, string username, string email, string passwordHash, string[]? allowedCategories);
 
     Task UpdatePasswordAsync(int masterUserId, string newPasswordHash);
     Task UpdateEmailAndUsernameAsync(int masterUserId, string email, string username);
