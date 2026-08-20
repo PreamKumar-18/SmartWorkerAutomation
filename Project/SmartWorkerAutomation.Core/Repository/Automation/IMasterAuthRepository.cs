@@ -19,5 +19,4 @@ public interface IMasterAuthRepository
 
     Task UpdatePasswordAsync(int masterUserId, string newPasswordHash);
     Task UpdateEmailAndUsernameAsync(int masterUserId, string email, string username);
-    Task<bool> IsSuperAdminByEmailAsync(string email);
 }
