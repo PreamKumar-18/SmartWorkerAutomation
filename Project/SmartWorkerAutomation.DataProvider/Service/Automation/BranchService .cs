@@ -12,13 +12,11 @@ public class BranchService : IBranchService
 {
     private readonly DbConnectionFactory _connectionFactory;
     private readonly IQueryStore _queryStore;
-    private readonly IMasterAuthRepository _masterAuthRepository;
 
-    public BranchService(DbConnectionFactory connectionFactory, IQueryStore queryStore, IMasterAuthRepository masterAuthRepository)
+    public BranchService(DbConnectionFactory connectionFactory, IQueryStore queryStore)
     {
         _connectionFactory = connectionFactory;
         _queryStore = queryStore;
-        _masterAuthRepository = masterAuthRepository;
     }
 
     /// <summary>
@@ -32,16 +30,18 @@ public class BranchService : IBranchService
     {
         using var connection = _connectionFactory.CreateConnection();
 
-        // Step 1: find this tenant user's email (bridge key to master DB)
-        var emailQuery = _queryStore.Get("Branch:GetTenantUserEmailById");
-        var email = await connection.QuerySingleOrDefaultAsync<string>(emailQuery, new { UserId = userId });
-        if (email is null)
+        // Resolve the TARGET user's actual role directly from the tenant DB -
+        // role now lives in tenant User.RoleId, not master userinfo, so no
+        // email-bridge to master is needed anymore.
+        var roleQuery = _queryStore.Get("Branch:GetUserRoleNameById");
+        var roleName = await connection.QuerySingleOrDefaultAsync<string>(roleQuery, new { UserId = userId });
+
+        if (roleName is null)
         {
             return Enumerable.Empty<UserBranchSummary>(); // no such user in this tenant
         }
 
-        // Step 2: resolve their ACTUAL role from master, not the caller's role
-        var targetIsSuperAdmin = await _masterAuthRepository.IsSuperAdminByEmailAsync(email); // new method, see below
+        var targetIsSuperAdmin = string.Equals(roleName, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
 
         var queryKey = targetIsSuperAdmin ? "Branch:GetAllActiveBranches" : "Branch:GetBranchesForUser";
         var sql = _queryStore.Get(queryKey);

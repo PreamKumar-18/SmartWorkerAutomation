@@ -237,14 +237,14 @@
       "UpdatePassword": "UPDATE userinfo SET password_hash = @PasswordHash, updated_at = now() WHERE id = @Id",
       "UpdateEmailAndUsername": "UPDATE userinfo SET email = @Email, username = @Username, updated_at = now() WHERE id = @Id",
       "GetRoleNameByOrgAndUserId": "SELECT r.role_name FROM userinfo u JOIN userrole r ON r.id = u.roleid WHERE u.orgid = @OrgId AND u.id = @MasterUserId",
-      "GetRoleNameByEmail": "SELECT r.role_name FROM userinfo u JOIN userrole r ON r.id = u.roleid WHERE u.email = @Email AND u.status = true",
       "InsertUserBranch": "INSERT INTO user_branch (\"UserId\", branch_id, is_primary) VALUES (@UserId, @BranchId, @IsPrimary) ON CONFLICT (\"UserId\", branch_id) DO NOTHING"
     },
     "Branch": {
       "GetBranchesForUser": "SELECT b.id AS branchid, b.branch_code AS branchcode, b.branch_name AS branchname, ub.is_primary AS isprimary FROM user_branch ub JOIN branch b ON b.id = ub.branch_id WHERE ub.\"UserId\" = @UserId AND b.is_active = true ORDER BY ub.is_primary DESC, b.branch_name",
       "GetAllActiveBranches": "SELECT id AS branchid, branch_code AS branchcode, branch_name AS branchname, false AS isprimary FROM branch WHERE is_active = true ORDER BY branch_name",
-      "GetTenantUserEmailById": "SELECT \"Email\" FROM \"User\" WHERE \"UserId\" = @UserId"
-      
+      "GetTenantUserEmailById": "SELECT \"Email\" FROM \"User\" WHERE \"UserId\" = @UserId",
+      "GetUserRoleNameById": "SELECT r.\"UserType\" FROM \"User\" u JOIN \"UserType\" r ON r.\"UserTypeId\" = u.\"UserTypeId\" WHERE u.\"UserId\" = @UserId"
+
     }
   }
 }
