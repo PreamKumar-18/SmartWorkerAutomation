@@ -47,4 +47,21 @@ public class BranchService : IBranchService
         var sql = _queryStore.Get(queryKey);
         return await connection.QueryAsync<UserBranchSummary>(sql, new { UserId = userId });
     }
+
+    public async Task<int[]?> GetAccessibleBranchIdsAsync(int userId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        var roleQuery = _queryStore.Get("Branch:GetUserRoleNameById");
+        var roleName = await connection.QuerySingleOrDefaultAsync<string>(roleQuery, new { UserId = userId });
+
+        if (string.Equals(roleName, "SuperAdmin", StringComparison.OrdinalIgnoreCase))
+        {
+            return null; // no restriction - caller skips branch filtering entirely
+        }
+
+        var branchIdsQuery = _queryStore.Get("Branch:GetBranchIdsForUser");
+        var branchIds = await connection.QueryAsync<int>(branchIdsQuery, new { UserId = userId });
+        return branchIds.ToArray(); // could be empty - that's meaningful (sees nothing)
+    }
 }

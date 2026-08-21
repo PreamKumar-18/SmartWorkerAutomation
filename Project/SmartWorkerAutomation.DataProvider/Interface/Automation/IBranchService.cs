@@ -8,4 +8,5 @@ namespace SmartWorkerAutomation.DataProvider.Interface.Automation;
 public interface IBranchService
 {
     Task<IEnumerable<UserBranchSummary>> GetBranchesForUserAsync(int userId);
+    Task<int[]?> GetAccessibleBranchIdsAsync(int userId);
 }

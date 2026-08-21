@@ -134,31 +134,33 @@ public class UserController : ControllerBase
     /// </summary>
     [Authorize(AuthenticationSchemes = "CustomTokenScheme")]
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(
+    [FromQuery] int branchId = 0,
+    [FromQuery] string? sortColumn = null,
+    [FromQuery] string? sortDir = null,
+    [FromQuery] string? filters = null,
+    [FromQuery] int? page = null,
+    [FromQuery] int? pageSize = null)
     {
-        bool isSuperAdmin = User.IsInRole("SuperAdmin")
-                            || string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
-        bool isAdmin = User.IsInRole("Admin")
-                            || string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "Admin", StringComparison.OrdinalIgnoreCase);
-
-        if (!isSuperAdmin && !isAdmin)
+        var userIdClaim = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
+                           ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out var requestingUserId))
         {
-            return StatusCode(403, new { message = "You are not authorized to view users." });
+            return Unauthorized();
         }
 
-        var users = await _userService.GetAllUsersAsync();
+        var roleName = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
 
-        if (!isSuperAdmin)
+        try
         {
-            users = users.Where(u => u.UserTypeId == UserTypeIds.User);
+            var users = await _userService.GetUsersEnquiryAsync(requestingUserId, roleName, branchId, sortColumn, sortDir, filters, page, pageSize);
+            foreach (var u in users) u.Password = string.Empty;
+            return Ok(users);
         }
-
-        foreach (var u in users)
+        catch (UnauthorizedAccessException ex)
         {
-            u.Password = string.Empty;
+            return StatusCode(403, new { message = ex.Message });
         }
-
-        return Ok(users);
     }
 
     /// <summary>

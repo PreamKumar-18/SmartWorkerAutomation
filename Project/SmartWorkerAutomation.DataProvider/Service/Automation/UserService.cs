@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using SmartWorkerAutomation.Common.Automation;
 using SmartWorkerAutomation.Core.Repository.Automation;
+using SmartWorkerAutomation.DataProvider.Interface.Automation;
 using SmartWorkerAutomation.DataProvider.Service.Automation;
 using System;
 using System.Collections.Generic;
@@ -19,9 +20,10 @@ public class UserService : IUserService
     private readonly IQueryStore _queryStore;
     private readonly IMasterAuthRepository _masterAuthRepository;
     private readonly DbConnectionFactory _connectionFactory;
+    private readonly IBranchService _branchService;
 
     public UserService(IUserRepository userRepository, ITokenService tokenService, ITenantResolverService tenantResolverService, 
-        IQueryStore queryStore, IMasterAuthRepository masterAuthRepository, DbConnectionFactory connectionFactory)
+        IQueryStore queryStore, IMasterAuthRepository masterAuthRepository, DbConnectionFactory connectionFactory, IBranchService branchService)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
@@ -29,11 +31,83 @@ public class UserService : IUserService
         _queryStore = queryStore;
         _masterAuthRepository = masterAuthRepository;
         _connectionFactory = connectionFactory;
+        _branchService = branchService;
     }
 
     public async Task<IEnumerable<User>> GetAllUsersAsync()
     {
         return await _userRepository.GetAllUsersAsync();
+    }
+
+    public async Task<IEnumerable<User>> GetUsersEnquiryAsync(
+    int requestingUserId,
+    string requestingUserRole,
+    int branchId = 0,
+    string? sortColumn = null,
+    string? sortDir = null,
+    string? filtersJson = null,
+    int? page = null,
+    int? pageSize = null)
+    {
+        bool isSuperAdmin = string.Equals(requestingUserRole, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+        bool isAdmin = string.Equals(requestingUserRole, "Admin", StringComparison.OrdinalIgnoreCase);
+
+        if (!isSuperAdmin && !isAdmin)
+        {
+            throw new UnauthorizedAccessException("You are not authorized to view the user list.");
+        }
+
+        // Always go through the common resolver - null means SuperAdmin/no
+        // restriction, an array means "these are the branches this user can
+        // see" (empty array = sees nothing).
+        var accessible = await _branchService.GetAccessibleBranchIdsAsync(requestingUserId);
+
+        int[]? branchIdsToPass;
+
+        if (branchId != 0)
+        {
+            // A specific branch was requested - must be validated against the
+            // caller's own access, UNLESS they have no restriction at all
+            // (accessible == null, i.e. SuperAdmin).
+            if (accessible is null)
+            {
+                branchIdsToPass = new[] { branchId }; // SuperAdmin - trusted as-is
+            }
+            else if (accessible.Contains(branchId))
+            {
+                branchIdsToPass = new[] { branchId }; // Admin/User - allowed, they have this branch
+            }
+            else
+            {
+                return Enumerable.Empty<User>(); // requested a branch they don't have access to
+            }
+        }
+        else
+        {
+            // No specific branch requested - use their full accessible set
+            // (null = no filter for SuperAdmin, array = their mapped branches).
+            if (accessible is not null && accessible.Length == 0)
+            {
+                return Enumerable.Empty<User>(); // Admin/User mapped to zero branches -> sees nothing
+            }
+            branchIdsToPass = accessible;
+        }
+
+        using var connection = _connectionFactory.CreateConnection();
+        var sql = _queryStore.Get("User:GetUserRecords");
+
+        int? limit = (pageSize.HasValue && pageSize.Value > 0) ? pageSize.Value : (int?)null;
+        int offset = (limit.HasValue && page.HasValue && page.Value > 1) ? (page.Value - 1) * limit.Value : 0;
+
+        return await connection.QueryAsync<User>(sql, new
+        {
+            BranchIds = branchIdsToPass,
+            SortColumn = string.IsNullOrWhiteSpace(sortColumn) ? "UserId" : sortColumn,
+            SortDir = string.IsNullOrWhiteSpace(sortDir) ? "desc" : sortDir,
+            Filters = string.IsNullOrWhiteSpace(filtersJson) ? null : filtersJson, // guard here
+            Limit = limit,
+            Offset = offset,
+        });
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request)

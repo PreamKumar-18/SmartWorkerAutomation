@@ -97,7 +97,8 @@
       "UpdateAllowedCategories": "UPDATE \"User\" SET allowedcategories = @p_categories WHERE \"UserId\" = @p_userid",
       "GetAllUsers": "SELECT * FROM \"User\" a ORDER BY a.\"UserId\"",
       "InsertUserBranch": "INSERT INTO user_branch (\"UserId\", branch_id, is_primary) VALUES (@UserId, @BranchId, @IsPrimary) ON CONFLICT (\"UserId\", branch_id) DO NOTHING",
-      "UpsertDevice": "INSERT INTO user_device\n    (user_id, device_id, push_token, platform, device_model, os_version, app_version, last_login_at, created_at, updated_at)\nVALUES\n    (@p_userid, @p_deviceid, @p_pushtoken, @p_platform, @p_devicemodel, @p_osversion, @p_appversion, now(), now(), now())\nON CONFLICT (user_id, device_id) DO UPDATE SET\n    push_token = EXCLUDED.push_token,\n    platform = EXCLUDED.platform,\n    device_model = EXCLUDED.device_model,\n    os_version = EXCLUDED.os_version,\n    app_version = EXCLUDED.app_version,\n    last_login_at = now(),\n    updated_at = now()"
+      "UpsertDevice": "INSERT INTO user_device\n    (user_id, device_id, push_token, platform, device_model, os_version, app_version, last_login_at, created_at, updated_at)\nVALUES\n    (@p_userid, @p_deviceid, @p_pushtoken, @p_platform, @p_devicemodel, @p_osversion, @p_appversion, now(), now(), now())\nON CONFLICT (user_id, device_id) DO UPDATE SET\n    push_token = EXCLUDED.push_token,\n    platform = EXCLUDED.platform,\n    device_model = EXCLUDED.device_model,\n    os_version = EXCLUDED.os_version,\n    app_version = EXCLUDED.app_version,\n    last_login_at = now(),\n    updated_at = now()",
+      "GetUserRecords": "SELECT * FROM fn_get_user_records(@BranchIds, @SortColumn, @SortDir, @Filters::jsonb, @Limit, @Offset)"
     },
 
     "RecordsExport": {
@@ -185,7 +186,8 @@
     "Branch": {
       "GetBranchesForUser": "SELECT b.id AS branchid, b.branch_code AS branchcode, b.branch_name AS branchname, ub.is_primary AS isprimary FROM user_branch ub JOIN branch b ON b.id = ub.branch_id WHERE ub.\"UserId\" = @UserId AND b.is_active = true ORDER BY ub.is_primary DESC, b.branch_name",
       "GetAllActiveBranches": "SELECT id AS branchid, branch_code AS branchcode, branch_name AS branchname, false AS isprimary FROM branch WHERE is_active = true ORDER BY branch_name",
-      "GetUserRoleNameById": "SELECT r.\"UserType\" FROM \"User\" u JOIN \"UserType\" r ON r.\"UserTypeId\" = u.\"UserTypeId\" WHERE u.\"UserId\" = @UserId"
+      "GetUserRoleNameById": "SELECT r.\"UserType\" FROM \"User\" u JOIN \"UserType\" r ON r.\"UserTypeId\" = u.\"UserTypeId\" WHERE u.\"UserId\" = @UserId",
+      "GetBranchIdsForUser": "SELECT branch_id FROM user_branch WHERE \"UserId\" = @UserId"
 
     }
   }
