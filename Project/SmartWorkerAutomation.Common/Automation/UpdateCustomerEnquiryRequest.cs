@@ -20,4 +20,12 @@ public class UpdateCustomerEnquiryRequest
     public string? Email { get; set; }
     public string EnquiryStatus { get; set; } = CustomerEnquiryStatus.NotContacted;
     public string? Remarks { get; set; }
+
+    public int? BranchId { get; set; }
+    public string? ProductInterest { get; set; }
+    public DateTime? EnquiryDate { get; set; }
+    public DateTime? FollowUpDate { get; set; }
+    public decimal? DealValue { get; set; }
+    public string? LeadSource { get; set; }
+    public string Stage { get; set; } = CustomerEnquiryStage.New;
 }

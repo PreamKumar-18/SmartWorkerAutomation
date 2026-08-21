@@ -8,7 +8,50 @@ namespace SmartWorkerAutomation.DataProvider.Automation;
 
 public interface IInquiryService
 {
-    Task<IEnumerable<dynamic>> GetInquiryDataAsync(string category, string userIdClaim, bool isSuperAdmin, int[]? branchIds);
+    /// <summary>
+    /// Category record list - Records page / Category Dashboard / Pending
+    /// Actions aggregation. For the 5 branch-scoped business categories
+    /// (finance/purchase/inventory/dispatch/production) this calls the
+    /// matching fn_get_{category}_records(...) Postgres function - branch
+    /// entitlement is resolved live against user_branch *inside* the
+    /// function, not from a JWT claim, so <paramref name="branchId"/> here
+    /// is just "which branch the caller currently has selected" (0 = All
+    /// Branches they belong to), not a trust boundary by itself - a caller
+    /// can't see a branch they aren't actually mapped to no matter what they
+    /// pass. SuperAdmin bypasses entitlement entirely (branchId still narrows
+    /// which branch's rows come back, just without the ownership check).
+    /// sortColumn/sortDir/filters/page/pageSize are all optional - omitting
+    /// them preserves "everything for this scope, sorted by id desc."
+    /// ruleconfiguration/filetracking (admin/global data, not branch-scoped)
+    /// fall back to the original view-based path, unaffected by any of this.
+    /// </summary>
+    Task<IEnumerable<dynamic>> GetInquiryDataAsync(
+        string category,
+        string userIdClaim,
+        bool isSuperAdmin,
+        int branchId = 0,
+        string? sortColumn = null,
+        string? sortDir = null,
+        string? filtersJson = null,
+        int? page = null,
+        int? pageSize = null);
+
+    /// <summary>
+    /// Companion to GetInquiryDataAsync for the same 5 branch-scoped
+    /// business categories - the matching fn_count_{category}_records(...)
+    /// runs the identical branch/user scoping and filter allowlist as the
+    /// list function, just count(*) instead of returning rows, so "page 1 of
+    /// N" can be built without paying for a second full row fetch. Only
+    /// exists for categories in the branch-scoped set - throws
+    /// ArgumentException for ruleconfiguration/filetracking, which don't
+    /// need this (both are unpaginated in the UI today).
+    /// </summary>
+    Task<int> GetInquiryCountAsync(
+        string category,
+        string userIdClaim,
+        bool isSuperAdmin,
+        int branchId = 0,
+        string? filtersJson = null);
 
     /// <summary>
     /// Single-record read, straight from the same category view

@@ -27,7 +27,7 @@ public interface IStagingReviewService
     /// <summary>
     /// Deletes every automation_staging row for this file/user whose
     /// last-classified Status isn't in StagingReviewStatus.Promotable, then
-    /// calls sync_automation_staging_ui_for_user to promote the rest into
+    /// calls sync_automation_records_all_flows to promote the rest into
     /// automation_records. Call ClassifyAsync first (or rely on a prior
     /// call) so ingest_status reflects the current classification before
     /// confirming.

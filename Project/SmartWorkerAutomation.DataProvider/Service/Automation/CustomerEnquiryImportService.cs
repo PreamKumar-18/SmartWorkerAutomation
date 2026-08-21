@@ -67,7 +67,7 @@ public class CustomerEnquiryImportService : ICustomerEnquiryImportService
         return stream.ToArray();
     }
 
-    public async Task<CustomerEnquiryImportResult> ImportAsync(Stream fileStream, string fileName, string? importedBy)
+    public async Task<CustomerEnquiryImportResult> ImportAsync(Stream fileStream, string fileName, string? importedBy, int? userId, int? branchId)
     {
         var rows = ParseRows(fileStream, fileName);
 
@@ -115,6 +115,26 @@ public class CustomerEnquiryImportService : ICustomerEnquiryImportService
                 Email = NullIfBlank(row.Email),
                 EnquiryStatus = CustomerEnquiryStatus.NotContacted,
                 Remarks = (string?)null,
+                // BranchId/UserId - the caller's branch-picker selection and
+                // JWT-derived numeric user id (see this method's own doc
+                // comment). Previously missing entirely, along with every
+                // field below (ProductInterest through Stage) - Insert's SQL
+                // (Queries.json's CustomerEnquiry:Insert) requires all of
+                // these as named @parameters, so this call was throwing a
+                // Dapper/Npgsql "parameter not found" error on literally
+                // every row before this fix, not just silently leaving
+                // branch_id/user_id null. None of these have a spreadsheet
+                // column to source from, so they go in as null/the same
+                // column-default Stage the single-row Create form starts a
+                // brand-new entry at.
+                BranchId = branchId,
+                UserId = userId,
+                ProductInterest = (string?)null,
+                EnquiryDate = (DateTime?)null,
+                FollowUpDate = (DateTime?)null,
+                DealValue = (decimal?)null,
+                LeadSource = (string?)null,
+                Stage = CustomerEnquiryStage.New,
                 CreatedBy = importedBy
             });
 

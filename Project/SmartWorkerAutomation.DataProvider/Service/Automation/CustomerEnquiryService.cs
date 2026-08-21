@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using SmartWorkerAutomation.Common.Automation;
@@ -18,21 +16,6 @@ public class CustomerEnquiryService : ICustomerEnquiryService
         _queryStore = queryStore;
     }
 
-    public async Task<IReadOnlyList<CustomerEnquiry>> ListAsync(CustomerEnquiryListFilter filter)
-    {
-        using var connection = _connectionFactory.CreateConnection();
-        
-        var sql = _queryStore.Get("CustomerEnquiry:List");
-        var rows = await connection.QueryAsync<CustomerEnquiry>(sql, new
-        {
-            EnquiryStatus = filter.EnquiryStatus,
-            IsActive = filter.IsActive,
-            Search = filter.Search
-        });
-
-        return rows.ToList();
-    }
-
     public async Task<CustomerEnquiry?> GetByIdAsync(int id)
     {
         using var connection = _connectionFactory.CreateConnection();
@@ -40,7 +23,7 @@ public class CustomerEnquiryService : ICustomerEnquiryService
         return await connection.QuerySingleOrDefaultAsync<CustomerEnquiry>(sql, new { Id = id });
     }
 
-    public async Task<CustomerEnquiry> CreateAsync(CreateCustomerEnquiryRequest request, string? createdBy)
+    public async Task<CustomerEnquiry> CreateAsync(CreateCustomerEnquiryRequest request, string? createdBy, int? userId)
     {
         using var connection = _connectionFactory.CreateConnection();
         var sql = _queryStore.Get("CustomerEnquiry:Insert");
@@ -56,6 +39,14 @@ public class CustomerEnquiryService : ICustomerEnquiryService
             request.Email,
             request.EnquiryStatus,
             request.Remarks,
+            request.BranchId,
+            UserId = userId,
+            request.ProductInterest,
+            request.EnquiryDate,
+            request.FollowUpDate,
+            request.DealValue,
+            request.LeadSource,
+            request.Stage,
             CreatedBy = createdBy
         });
     }
@@ -77,6 +68,13 @@ public class CustomerEnquiryService : ICustomerEnquiryService
             request.Email,
             request.EnquiryStatus,
             request.Remarks,
+            request.BranchId,
+            request.ProductInterest,
+            request.EnquiryDate,
+            request.FollowUpDate,
+            request.DealValue,
+            request.LeadSource,
+            request.Stage,
             UpdatedBy = updatedBy
         });
     }

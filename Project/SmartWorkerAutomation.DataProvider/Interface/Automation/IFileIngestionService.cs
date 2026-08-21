@@ -23,5 +23,13 @@ public interface IFileIngestionService
     /// has its other sheets skipped, same as GetAllowedCategories()'s
     /// fail-open convention elsewhere in this codebase.
     /// </summary>
-    Task<N8nIngestionResponse> IngestAsync(Stream fileStream, string fileName, string? userId, IReadOnlyCollection<string>? allowedCategories);
+    /// <paramref name="branchId"/> is stamped onto every staged row for this
+    /// upload (automation_staging.branch_id, carried through into
+    /// automation_records once confirmed) - see BulkInsertStaging in
+    /// FileIngestionService and the branch-scoped
+    /// automation_records_unique constraint (category_name, natural_key,
+    /// branch_id). Required, not optional - IngestionController.UploadFile
+    /// rejects the request before this is ever called if the frontend
+    /// didn't supply one.
+    Task<N8nIngestionResponse> IngestAsync(Stream fileStream, string fileName, string? userId, IReadOnlyCollection<string>? allowedCategories, int branchId);
 }

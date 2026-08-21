@@ -22,7 +22,7 @@ public static class StagingReviewStatus
     public const string DataIssue = "dataissue";
 
     /// <summary>Only rows with one of these statuses survive Confirm and get
-    /// promoted by sync_automation_staging_ui_for_user - everything else is
+    /// promoted by sync_automation_records_all_flows - everything else is
     /// deleted from automation_staging first.</summary>
     public static readonly string[] Promotable = { New, AlreadyExists };
 

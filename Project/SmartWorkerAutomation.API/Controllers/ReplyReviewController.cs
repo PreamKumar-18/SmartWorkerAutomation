@@ -166,8 +166,10 @@ public class ReplyReviewController : ControllerBase
     /// </summary>
     private IActionResult? CheckCategoryAccess(string category)
     {
-        bool isUser = string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "User", StringComparison.OrdinalIgnoreCase);
-        if (!isUser)
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        bool isRestrictable = string.Equals(role, "User", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
+        if (!isRestrictable)
         {
             return null;
         }
@@ -197,8 +199,10 @@ public class ReplyReviewController : ControllerBase
     /// </summary>
     private IEnumerable<dynamic> FilterByCategoryAccess(IEnumerable<dynamic> rows)
     {
-        bool isUser = string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "User", StringComparison.OrdinalIgnoreCase);
-        if (!isUser)
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        bool isRestrictable = string.Equals(role, "User", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
+        if (!isRestrictable)
         {
             return rows;
         }

@@ -66,10 +66,10 @@ public class RecordsExportService : IRecordsExportService
         return columns.Count > 0;
     }
 
-    public async Task<byte[]> ExportToExcelAsync(string category, string userIdClaim, bool isSuperAdmin, int[]? branchIds)
+    public async Task<byte[]> ExportToExcelAsync(string category, string userIdClaim, bool isSuperAdmin, int branchId = 0)
     {
         using var workbook = new XLWorkbook();
-        var added = await AddCategorySheetAsync(workbook, category.Trim(), userIdClaim, isSuperAdmin, branchIds);
+        var added = await AddCategorySheetAsync(workbook, category.Trim(), userIdClaim, isSuperAdmin, branchId);
         if (!added)
         {
             throw new ArgumentException($"Export isn't set up for category '{category}' yet - no rows in category_field_mapping.");
@@ -83,11 +83,12 @@ public class RecordsExportService : IRecordsExportService
     /// in category_field_mapping, or only <paramref name="allowedCategories"/>
     /// if the caller is a role-restricted user (null = unrestricted, same
     /// convention InquiryController.CheckCategoryAccess already uses).
-    /// Backs the Records page's Download button, which no longer downloads
-    /// just the currently-selected tab - one file, every category as its
-    /// own sheet.
+    /// Backs the Records page's Download button. <paramref name="branchId"/>
+    /// (0 = All Branches the caller belongs to) matches whichever branch is
+    /// currently selected on screen - the export mirrors exactly what the
+    /// table shows, same convention as GetInquiryDataAsync/GetInquiryCountAsync.
     /// </summary>
-    public async Task<byte[]> ExportAllToExcelAsync(string userIdClaim, bool isSuperAdmin, IReadOnlyCollection<string>? allowedCategories, int[]? branchIds)
+    public async Task<byte[]> ExportAllToExcelAsync(string userIdClaim, bool isSuperAdmin, IReadOnlyCollection<string>? allowedCategories, int branchId = 0)
     {
         var categories = await GetMappedCategoriesAsync();
         if (allowedCategories is not null)
@@ -102,7 +103,7 @@ public class RecordsExportService : IRecordsExportService
 
         foreach (var category in categories)
         {
-            var added = await AddCategorySheetAsync(workbook, category, userIdClaim, isSuperAdmin,branchIds);
+            var added = await AddCategorySheetAsync(workbook, category, userIdClaim, isSuperAdmin, branchId);
             anySheetAdded = anySheetAdded || added;
         }
 
@@ -120,7 +121,7 @@ public class RecordsExportService : IRecordsExportService
     /// nothing) if the category has no rows in category_field_mapping -
     /// lets callers skip/report that without a separate existence check.
     /// </summary>
-    private async Task<bool> AddCategorySheetAsync(XLWorkbook workbook, string category, string userIdClaim, bool isSuperAdmin, int[]? branchIds)
+    private async Task<bool> AddCategorySheetAsync(XLWorkbook workbook, string category, string userIdClaim, bool isSuperAdmin, int branchId)
     {
         var sheetColumnNames = await GetSheetColumnNamesAsync(category);
         if (sheetColumnNames.Count == 0)
@@ -137,8 +138,12 @@ public class RecordsExportService : IRecordsExportService
 
         // Same view/access-control path GET /api/Inquiry already uses - a
         // non-superadmin only ever sees their own rows, same as the table
-        // on screen.
-        var rows = await _inquiryService.GetInquiryDataAsync(category, userIdClaim, isSuperAdmin,branchIds);
+        // on screen. branchId narrows it further to whichever branch is
+        // currently selected (0 = every branch the caller belongs to) -
+        // ruleconfiguration/filetracking categories ignore branchId
+        // entirely (GetInquiryDataAsync falls back to the unscoped view
+        // path for those), same as the regular list endpoint.
+        var rows = await _inquiryService.GetInquiryDataAsync(category, userIdClaim, isSuperAdmin, branchId);
 
         var worksheet = workbook.Worksheets.Add(SheetName(category));
 

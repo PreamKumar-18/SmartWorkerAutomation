@@ -45,6 +45,7 @@ public class StagingReviewService : IStagingReviewService
         public int RowNumber { get; set; }
         public string? BusinessDataJson { get; set; }
         public string? IngestStatus { get; set; }
+        public int? BranchId { get; set; }
     }
 
     /// <summary>Ingestion:GetMandatoryColumns result shape - one
@@ -99,11 +100,20 @@ public class StagingReviewService : IStagingReviewService
                 g => g.Select(c => c.ColumnName).Distinct(StringComparer.OrdinalIgnoreCase).ToList(),
                 StringComparer.OrdinalIgnoreCase);
 
+        // One upload is always one branch (branch_id is set once, for the
+        // whole staging batch, by BulkInsertStaging - see FileIngestionService.
+        // IngestAsync) - every row in stagingRows shares the same value, so
+        // reading it off the first row is safe rather than needing a second
+        // query. Existing-key matching has to be scoped to this branch too,
+        // now that automation_records_unique is (category_name, natural_key,
+        // branch_id) - otherwise Branch B's genuinely new record would get
+        // wrongly flagged "already_exist" against Branch A's unrelated one.
+        var branchId = stagingRows[0].BranchId;
         var categories = stagingRows.Select(r => r.CategoryName).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         var existingKeys = new HashSet<string>(
             (await connection.QueryAsync<ExistingKeyRow>(
                 _queryStore.Get("Ingestion:GetExistingNaturalKeys"),
-                new { Categories = categories }))
+                new { Categories = categories, BranchId = branchId }))
             .Select(k => ExistingKeyToken(k.CategoryName, k.NaturalKey)),
             StringComparer.Ordinal);
 
