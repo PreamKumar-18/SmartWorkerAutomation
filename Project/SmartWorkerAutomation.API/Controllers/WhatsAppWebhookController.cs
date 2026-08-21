@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SmartWorkerAutomation.DataProvider.Automation;
+using SmartWorkerAutomation.Core.Repository.Automation;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -21,22 +21,33 @@ namespace SmartWorkerAutomation.API.Controllers;
 /// X-Hub-Signature-256 header when that's configured - until it is, POSTs
 /// are accepted unverified (logged as a warning) so capture can still work
 /// while that credential is pending.
+///
+/// Fast-ack: Receive() only verifies the signature and writes the raw body
+/// to public.webhook_inbox (master DB), then returns 200 immediately - it
+/// does NOT resolve a tenant or touch a tenant DB inline anymore. That
+/// used to mean this handler's response time depended on a tenant
+/// connection pool that a burst of concurrent webhooks could exhaust, and
+/// any failure there was caught, logged, and silently discarded behind an
+/// already-decided 200. WebhookInboxDrainBackgroundService now does the
+/// actual tenant-routing + processing out-of-band, a few seconds later,
+/// with retries and a visible status per payload. See
+/// Database/add_webhook_inbox.sql.
 /// </summary>
-[Authorize(AuthenticationSchemes = "CustomTokenScheme")]
+[AllowAnonymous]
 [ApiController]
 [Route("api/whatsapp")]
 public class WhatsAppWebhookController : ControllerBase
 {
-    private readonly IWhatsAppInboundService _inboundService;
+    private readonly IWebhookInboxRepository _inboxRepository;
     private readonly IConfiguration _configuration;
     private readonly ILogger<WhatsAppWebhookController> _logger;
 
     public WhatsAppWebhookController(
-        IWhatsAppInboundService inboundService,
+        IWebhookInboxRepository inboxRepository,
         IConfiguration configuration,
         ILogger<WhatsAppWebhookController> logger)
     {
-        _inboundService = inboundService;
+        _inboxRepository = inboxRepository;
         _configuration = configuration;
         _logger = logger;
     }
@@ -89,12 +100,18 @@ public class WhatsAppWebhookController : ControllerBase
 
         try
         {
+            // Validate it's well-formed JSON before queuing it, but do
+            // nothing else with it here - tenant routing and the actual
+            // insert/match processing happen out-of-band in
+            // WebhookInboxDrainBackgroundService, so this handler's
+            // response time never depends on a tenant DB's connection
+            // pool or on how long processing takes.
             using var doc = JsonDocument.Parse(rawBody);
-            await _inboundService.ProcessWebhookPayloadAsync(doc.RootElement.Clone());
+            await _inboxRepository.InsertPendingAsync("whatsapp", rawBody);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "WF: Reply Capture WhatsApp - failed to process webhook payload.");
+            _logger.LogError(ex, "WF: Reply Capture WhatsApp - failed to record webhook payload to webhook_inbox.");
         }
 
         // Meta requires a 200 regardless of what we did with the payload -

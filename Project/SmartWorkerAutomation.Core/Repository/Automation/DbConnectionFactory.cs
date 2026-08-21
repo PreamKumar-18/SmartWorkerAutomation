@@ -36,12 +36,20 @@ public class DbConnectionFactory
         var connectionString = ResolveConnectionStringAsync().GetAwaiter().GetResult();
         return new NpgsqlConnection(connectionString);
     }
-    private async Task<string> ResolveConnectionStringAsync()
+    /// <summary>
+    /// Reads the orgid claim off the current authenticated request - the
+    /// same resolution ResolveConnectionStringAsync uses, exposed
+    /// separately for callers that need the raw orgId itself (e.g.
+    /// NotificationsService/NotificationsController resolving per-org
+    /// WhatsApp/SMTP send credentials via ITenantResolverService) rather
+    /// than a tenant connection.
+    /// </summary>
+    public int ResolveOrgId()
     {
         var httpContext = _httpContextAccessor.HttpContext
             ?? throw new InvalidOperationException(
-                "DbConnectionFactory.CreateConnection called outside an HTTP request context - " +
-                "background services must resolve their own tenant connection explicitly, not via this factory.");
+                "DbConnectionFactory.ResolveOrgId called outside an HTTP request context - " +
+                "background services must resolve their own orgid explicitly, not via this factory.");
 
         var orgIdClaim = httpContext.User.FindFirst("orgid")?.Value
             ?? throw new InvalidOperationException(
@@ -51,6 +59,13 @@ public class DbConnectionFactory
         {
             throw new InvalidOperationException($"'orgid' claim value '{orgIdClaim}' is not a valid integer.");
         }
+
+        return orgId;
+    }
+
+    private async Task<string> ResolveConnectionStringAsync()
+    {
+        var orgId = ResolveOrgId();
 
         var connectionString = await _tenantResolver.GetTenantConnectionStringAsync(orgId);
         return connectionString

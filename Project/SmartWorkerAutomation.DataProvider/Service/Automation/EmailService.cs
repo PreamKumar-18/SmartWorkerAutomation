@@ -1,7 +1,8 @@
 using System.Net;
 using System.Net.Mail;
+using Microsoft.Extensions.Logging;
 using SmartWorkerAutomation.Common.Automation;
-using Microsoft.Extensions.Configuration;
+using SmartWorkerAutomation.Core.Repository.Automation;
 
 namespace SmartWorkerAutomation.DataProvider.Automation;
 
@@ -11,71 +12,110 @@ namespace SmartWorkerAutomation.DataProvider.Automation;
 /// through via SMTP, no attribution footer (matching appendAttribution:
 /// false on the n8n node). Uses SMTP + an app password rather than the
 /// Gmail API/OAuth the n8n node uses, since that's what the built-in
-/// System.Net.Mail client supports without adding a new OAuth flow -
-/// point Smtp:Host/User/Password at Gmail's smtp.gmail.com:587 with a
-/// Google App Password to send from the same mailbox n8n uses today.
+/// System.Net.Mail client supports without adding a new OAuth flow.
+///
+/// Credentials are resolved per-call via ITenantResolverService.
+/// GetSmtpCredentialsAsync(orgId) - the org's own dedicated SMTP account if
+/// set, otherwise the global Smtp:* config fallback (e.g. Gmail's
+/// smtp.gmail.com:587 with a Google App Password) - rather than always
+/// reading the same global config, since a shared org can no longer assume
+/// every send should go out through the same mailbox.
+///
+/// Retries transient failures (4xx-class SMTP status codes like "mailbox
+/// busy"/"service not available", plus network-level errors) up to
+/// MaxAttempts times with exponential backoff. Permanent failures (5xx-class
+/// SMTP rejections like "mailbox unavailable"/bad recipient, auth failures)
+/// fail immediately - retrying those wastes time on something a retry can't
+/// fix.
 /// </summary>
 public class EmailService : IEmailService
 {
-    private readonly IConfiguration _configuration;
+    private const int MaxAttempts = 3;
+    private static readonly TimeSpan InitialRetryDelay = TimeSpan.FromSeconds(1);
 
-    public EmailService(IConfiguration configuration)
+    private readonly ITenantResolverService _tenantResolver;
+    private readonly ILogger<EmailService> _logger;
+
+    public EmailService(ITenantResolverService tenantResolver, ILogger<EmailService> logger)
     {
-        _configuration = configuration;
+        _tenantResolver = tenantResolver;
+        _logger = logger;
     }
 
-    public async Task<EmailSendResponse> SendAsync(EmailSendRequest request)
+    public async Task<EmailSendResponse> SendAsync(EmailSendRequest request, int orgId)
     {
-        var smtp = _configuration.GetSection("Smtp");
-        var host = RequireConfig(smtp, "Host");
-        var port = int.TryParse(smtp["Port"], out var configuredPort) ? configuredPort : 587;
-        var user = RequireConfig(smtp, "User");
-        var password = RequireConfig(smtp, "Password");
-        var fromAddress = string.IsNullOrWhiteSpace(smtp["From"]) ? user : smtp["From"]!;
-        var fromName = string.IsNullOrWhiteSpace(smtp["FromName"]) ? "SmartWorker Automation" : smtp["FromName"]!;
-
-        using var message = new MailMessage
-        {
-            From = new MailAddress(fromAddress, fromName),
-            Subject = request.Subject,
-            Body = request.Body,
-            IsBodyHtml = true,
-        };
-        message.To.Add(request.To);
-
-        using var client = new SmtpClient(host, port)
-        {
-            Credentials = new NetworkCredential(user, password),
-            EnableSsl = true,
-        };
-
+        SmtpOrgCredentials credentials;
         try
         {
-            await client.SendMailAsync(message);
-            return new EmailSendResponse("sent", null);
+            credentials = await _tenantResolver.GetSmtpCredentialsAsync(orgId);
         }
         catch (Exception ex)
         {
-            return new EmailSendResponse("failed", ex.Message);
+            return new EmailSendResponse("failed", $"Could not resolve SMTP credentials for orgid {orgId}: {ex.Message}");
         }
+
+        var delay = InitialRetryDelay;
+
+        for (var attempt = 1; attempt <= MaxAttempts; attempt++)
+        {
+            using var message = new MailMessage
+            {
+                From = new MailAddress(credentials.FromAddress, credentials.FromName),
+                Subject = request.Subject,
+                Body = request.Body,
+                IsBodyHtml = true,
+            };
+            message.To.Add(request.To);
+
+            using var client = new SmtpClient(credentials.Host, credentials.Port)
+            {
+                Credentials = new NetworkCredential(credentials.User, credentials.Password),
+                EnableSsl = true,
+            };
+
+            try
+            {
+                await client.SendMailAsync(message);
+                return new EmailSendResponse("sent", null);
+            }
+            catch (SmtpException ex) when (attempt < MaxAttempts && IsTransientSmtpStatus(ex.StatusCode))
+            {
+                _logger.LogWarning(ex, "WF: Reminder Send (Automation) - email send attempt {Attempt}/{MaxAttempts} for orgid {OrgId} got a transient SMTP status ({StatusCode}); retrying in {Delay}.", attempt, MaxAttempts, orgId, ex.StatusCode, delay);
+                await Task.Delay(delay);
+                delay *= 2;
+            }
+            catch (Exception ex) when (attempt < MaxAttempts && ex is not SmtpException)
+            {
+                // Network-level failure (socket/timeout/DNS), not an SMTP
+                // protocol-level rejection - worth retrying the same as a
+                // transient SMTP status.
+                _logger.LogWarning(ex, "WF: Reminder Send (Automation) - email send attempt {Attempt}/{MaxAttempts} for orgid {OrgId} threw a transient error; retrying in {Delay}.", attempt, MaxAttempts, orgId, delay);
+                await Task.Delay(delay);
+                delay *= 2;
+            }
+            catch (Exception ex)
+            {
+                return new EmailSendResponse("failed", ex.Message);
+            }
+        }
+
+        return new EmailSendResponse("failed", $"Exceeded {MaxAttempts} send attempts (transient errors each time).");
     }
 
     /// <summary>
-    /// Same as the plain <c>?? throw</c> pattern used elsewhere in this
-    /// codebase (see WhatsAppService), but also rejects an empty/whitespace
-    /// string - IConfiguration returns "" (not null) for a JSON key present
-    /// but set to "", so a null-only check silently lets a blank
-    /// Smtp:User/Password through to SmtpClient, which then fails with a
-    /// confusing server-side "Authentication Required" instead of a clear
-    /// "not configured" error from here.
+    /// SMTP 4xx-class replies are transient (server asked the client to try
+    /// again later); 5xx-class are permanent rejections (bad recipient,
+    /// policy rejection) that a retry can't fix. GeneralFailure (-1) means
+    /// System.Net.Mail couldn't even complete the SMTP conversation (a
+    /// connection-level issue), which is also worth retrying.
     /// </summary>
-    private static string RequireConfig(IConfigurationSection section, string key)
+    private static bool IsTransientSmtpStatus(SmtpStatusCode statusCode) => statusCode switch
     {
-        var value = section[key];
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            throw new InvalidOperationException($"Smtp:{key} not configured.");
-        }
-        return value;
-    }
+        SmtpStatusCode.ServiceNotAvailable => true,
+        SmtpStatusCode.MailboxBusy => true,
+        SmtpStatusCode.LocalErrorInProcessing => true,
+        SmtpStatusCode.InsufficientStorage => true,
+        SmtpStatusCode.GeneralFailure => true,
+        _ => false,
+    };
 }

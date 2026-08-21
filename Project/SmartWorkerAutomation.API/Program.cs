@@ -90,6 +90,7 @@ public class Program
         builder.Services.AddHostedService<ReconcileWhatsAppStatusBackgroundService>();
         builder.Services.AddHostedService<ReplyClassificationBackgroundService>();
         builder.Services.AddHostedService<InboundEmailBackgroundService>();
+        builder.Services.AddHostedService<WebhookInboxDrainBackgroundService>();
 
         // --- Automation CORS policy (Angular/Capacitor clients) ---
         const string AngularDevCorsPolicy = "AngularDevCorsPolicy";
