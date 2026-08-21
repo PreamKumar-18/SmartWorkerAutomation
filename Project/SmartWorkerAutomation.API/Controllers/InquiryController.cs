@@ -24,8 +24,26 @@ public class InquiryController : ControllerBase
         _exportService = exportService;
     }
 
+    /// <summary>
+    /// branchId (0 = All Branches the caller belongs to), sortColumn/sortDir,
+    /// filters (a JSON object string, e.g. {"material_status":"Pending"}),
+    /// and page/pageSize are all optional - omitting them behaves exactly as
+    /// before (everything the caller can see, sorted by id desc). Branch
+    /// entitlement is no longer read from a JWT claim here - it's checked
+    /// live inside fn_get_{category}_records against user_branch, so a
+    /// stale/forged branchId just returns nothing rather than a wrong
+    /// dataset. See IInquiryService.GetInquiryDataAsync for the full
+    /// contract.
+    /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetInquiryData([FromQuery] string category)
+    public async Task<IActionResult> GetInquiryData(
+        [FromQuery] string category,
+        [FromQuery] int branchId = 0,
+        [FromQuery] string? sortColumn = null,
+        [FromQuery] string? sortDir = null,
+        [FromQuery] string? filters = null,
+        [FromQuery] int? page = null,
+        [FromQuery] int? pageSize = null)
     {
         try
         {
@@ -43,13 +61,52 @@ public class InquiryController : ControllerBase
                 ? null
                 : categoriesClaim.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
-            var branchIdsClaim = User.FindFirst("branchids")?.Value;
-            var branchIds = string.IsNullOrEmpty(branchIdsClaim)
-                ? null
-                : branchIdsClaim.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
-
-            var data = await _inquiryService.GetInquiryDataAsync(category, userIdClaim ?? string.Empty, isSuperAdmin, branchIds);
+            var data = await _inquiryService.GetInquiryDataAsync(
+                category, userIdClaim ?? string.Empty, isSuperAdmin,
+                branchId, sortColumn, sortDir, filters, page, pageSize);
             return Ok(data);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while processing your request.", details = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Total row count for the same category/branchId/filters combination
+    /// GetInquiryData would use - lets the frontend build "page 1 of N"
+    /// without fetching every row just to count them. Only supports the 5
+    /// branch-scoped business categories (see
+    /// IInquiryService.GetInquiryCountAsync) - anything else 400s.
+    /// </summary>
+    [HttpGet("count")]
+    public async Task<IActionResult> GetInquiryCount(
+        [FromQuery] string category,
+        [FromQuery] int branchId = 0,
+        [FromQuery] string? filters = null)
+    {
+        try
+        {
+            var accessCheck = CheckCategoryAccess(category);
+            if (accessCheck != null) return accessCheck;
+
+            var userIdClaim = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
+                              ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            bool isSuperAdmin = User.IsInRole("SuperAdmin")
+                                || string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+
+            var count = await _inquiryService.GetInquiryCountAsync(
+                category, userIdClaim ?? string.Empty, isSuperAdmin, branchId, filters);
+            return Ok(new { totalCount = count });
         }
         catch (ArgumentException ex)
         {
@@ -113,17 +170,20 @@ public class InquiryController : ControllerBase
 
     /// <summary>
     /// Downloads every category's records as one .xlsx workbook, one
-    /// worksheet per category - backs the Records page's Download button
-    /// (no longer scoped to whichever tab is selected). A role-restricted
-    /// User only gets sheets for the categories in their own "categories"
-    /// claim (same restriction CheckCategoryAccess enforces per-request
-    /// elsewhere in this controller, applied here as a sheet filter instead
-    /// of an all-or-nothing 403 - unlike a single-category endpoint, there's
-    /// no single "category" to reject the whole request over). Same
-    /// isSuperAdmin/userId row-level scoping as GET above either way.
+    /// worksheet per category - backs the Records page's Download button.
+    /// branchId (0 = All Branches the caller belongs to, default) scopes
+    /// every sheet to whichever branch is currently selected on screen,
+    /// matching exactly what the table shows - same convention as GET
+    /// above. A role-restricted User only gets sheets for the categories in
+    /// their own "categories" claim (same restriction CheckCategoryAccess
+    /// enforces per-request elsewhere in this controller, applied here as a
+    /// sheet filter instead of an all-or-nothing 403 - unlike a
+    /// single-category endpoint, there's no single "category" to reject the
+    /// whole request over). Same isSuperAdmin/userId row-level scoping as
+    /// GET above either way.
     /// </summary>
     [HttpGet("export")]
-    public async Task<IActionResult> ExportRecords()
+    public async Task<IActionResult> ExportRecords([FromQuery] int branchId = 0)
     {
         try
         {
@@ -135,12 +195,7 @@ public class InquiryController : ControllerBase
 
             var allowedCategories = GetAllowedCategories();
 
-            var branchIdsClaim = User.FindFirst("branchids")?.Value;
-            var branchIds = string.IsNullOrEmpty(branchIdsClaim)
-                ? null
-                : branchIdsClaim.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
-
-            var fileBytes = await _exportService.ExportAllToExcelAsync(userIdClaim ?? string.Empty, isSuperAdmin, allowedCategories,branchIds);
+            var fileBytes = await _exportService.ExportAllToExcelAsync(userIdClaim ?? string.Empty, isSuperAdmin, allowedCategories, branchId);
             var fileName = $"records-export-{DateTime.UtcNow:yyyy-MM-dd}.xlsx";
 
             return File(
@@ -216,11 +271,30 @@ public class InquiryController : ControllerBase
     /// <summary>
     /// Category-level access check - see DashboardController.CheckCategoryAccess
     /// for the full rationale (fail-open when the categories claim is empty).
+    /// Restricts 'User' AND 'Admin' role accounts now (was 'User'-only) -
+    /// Admin became a selectable role for AllowedCategories in the user
+    /// creation/edit forms, so an Admin with an explicit allowlist should be
+    /// held to it the same way a restricted User already is; SuperAdmin
+    /// stays unconditionally unrestricted.
+    ///
+    /// Sale (customerenquiry) used to be unconditionally exempted from this
+    /// check entirely - CATEGORY_OPTIONS (the frontend's allowed-categories
+    /// checkbox list) never included it, so no account's "categories" claim
+    /// could ever contain "customerenquiry", and gating on it would have
+    /// 403'd every restricted account rather than just ones deliberately
+    /// denied Sale. Now that "Sales" is a real checkbox option, that
+    /// exemption is gone - Sale is gated exactly like Finance/Purchase/
+    /// Inventory: unchecked for a restricted account = no access, same as
+    /// any other category. Existing restricted accounts that relied on the
+    /// old blanket exemption need "Sales" explicitly added to their allowed
+    /// categories now if they still need it.
     /// </summary>
     private IActionResult? CheckCategoryAccess(string category)
     {
-        bool isUser = string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "User", StringComparison.OrdinalIgnoreCase);
-        if (!isUser)
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        bool isRestrictable = string.Equals(role, "User", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
+        if (!isRestrictable)
         {
             return null;
         }
@@ -243,13 +317,15 @@ public class InquiryController : ControllerBase
     /// <summary>
     /// Same claim/role logic as CheckCategoryAccess, but returns the allowed
     /// set instead of gating a single category - null means unrestricted
-    /// (not a role-"User", or the claim is empty, matching
+    /// (not a restrictable role, or the claim is empty, matching
     /// CheckCategoryAccess's fail-open behavior in both those cases).
     /// </summary>
     private List<string>? GetAllowedCategories()
     {
-        bool isUser = string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "User", StringComparison.OrdinalIgnoreCase);
-        if (!isUser)
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        bool isRestrictable = string.Equals(role, "User", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
+        if (!isRestrictable)
         {
             return null;
         }

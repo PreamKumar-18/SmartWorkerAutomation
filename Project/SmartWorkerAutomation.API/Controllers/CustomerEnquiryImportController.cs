@@ -41,9 +41,19 @@ public class CustomerEnquiryImportController : ControllerBase
             "customer-enquiry-template.xlsx");
     }
 
+    /// <summary>
+    /// branchId is required, same guard IngestionController.UploadFile
+    /// enforces for the Records upload path - customer_enquiries.branch_id
+    /// has no sane default to fall back to (a bulk-uploaded batch has no
+    /// per-row branch column of its own to source it from), so the caller
+    /// must have a specific branch selected (never the "All Branches"
+    /// pseudo-selection) before uploading. See
+    /// CustomerEnquiryImportBarComponent.onFileSelected for the matching
+    /// frontend guard.
+    /// </summary>
     [HttpPost("Upload")]
     [RequestSizeLimit(20_000_000)] // 20 MB
-    public async Task<IActionResult> Upload(IFormFile file)
+    public async Task<IActionResult> Upload(IFormFile file, [FromForm] int? branchId)
     {
         if (file is null || file.Length == 0)
         {
@@ -56,11 +66,17 @@ public class CustomerEnquiryImportController : ControllerBase
             return BadRequest(new { message = "Only .xlsx, .xls, or .csv files are supported." });
         }
 
+        if (branchId is null || branchId == 0)
+        {
+            return BadRequest(new { message = "Select a specific branch before uploading." });
+        }
+
         try
         {
             await using var stream = file.OpenReadStream();
             var importedBy = CurrentUserName();
-            var result = await _importService.ImportAsync(stream, file.FileName, importedBy);
+            var userId = CurrentUserId();
+            var result = await _importService.ImportAsync(stream, file.FileName, importedBy, userId, branchId);
             return Ok(result);
         }
         catch (Exception ex)
@@ -74,5 +90,19 @@ public class CustomerEnquiryImportController : ControllerBase
         return User.FindFirst(ClaimTypes.Name)?.Value
             ?? User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
             ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    }
+
+    /// <summary>Numeric "User"."UserId" off the JWT sub/NameIdentifier claim -
+    /// same resolution CustomerEnquiryController.CurrentUserBranchContext
+    /// uses, duplicated here rather than shared since this controller has no
+    /// branch-entitlement (isSuperAdmin) half to go with it. Null if the
+    /// claim is missing/non-numeric, so a malformed token still fails soft
+    /// (user_id just stays null on the imported rows) instead of 500ing the
+    /// whole upload.</summary>
+    private int? CurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
+            ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return int.TryParse(userIdClaim, out var parsed) ? parsed : null;
     }
 }

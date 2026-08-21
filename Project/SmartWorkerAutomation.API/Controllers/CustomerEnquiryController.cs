@@ -27,13 +27,6 @@ public class CustomerEnquiryController : ControllerBase
         _customerEnquiryService = customerEnquiryService;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> List([FromQuery] CustomerEnquiryListFilter filter)
-    {
-        var rows = await _customerEnquiryService.ListAsync(filter);
-        return Ok(rows);
-    }
-
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -57,7 +50,8 @@ public class CustomerEnquiryController : ControllerBase
         try
         {
             var createdBy = CurrentUserName();
-            var created = await _customerEnquiryService.CreateAsync(request, createdBy);
+            var (userId, _) = CurrentUserBranchContext();
+            var created = await _customerEnquiryService.CreateAsync(request, createdBy, userId == 0 ? null : userId);
             return Ok(created);
         }
         catch (Exception ex)
@@ -124,5 +118,26 @@ public class CustomerEnquiryController : ControllerBase
         return User.FindFirst(ClaimTypes.Name)?.Value
             ?? User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
             ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    }
+
+    /// <summary>Same claim-resolution pattern InquiryController.GetInquiryData uses
+    /// for its own branch entitlement check - userId comes off the JWT's sub/
+    /// NameIdentifier claim, isSuperAdmin off the SuperAdmin role (either
+    /// User.IsInRole or a plain role claim, whichever this token carries).
+    /// Added alongside the branch_id/pipeline-fields migration so List can
+    /// pass both through to CustomerEnquiry:List's new entitlement WHERE
+    /// clause - this controller previously had no numeric-userId or
+    /// superadmin resolution of any kind (only CurrentUserName() above, for
+    /// CreatedBy/UpdatedBy attribution).</summary>
+    private (int userId, bool isSuperAdmin) CurrentUserBranchContext()
+    {
+        var userIdClaim = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
+            ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = int.TryParse(userIdClaim, out var parsed) ? parsed : 0;
+
+        var isSuperAdmin = User.IsInRole("SuperAdmin")
+            || string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+
+        return (userId, isSuperAdmin);
     }
 }

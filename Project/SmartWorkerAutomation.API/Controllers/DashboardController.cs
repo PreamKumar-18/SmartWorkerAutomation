@@ -52,123 +52,6 @@ public class DashboardController : ControllerBase
     }
 
     /// <summary>
-    /// Reminder activity trend for the category. ?period=day (default, last
-    /// 30 days) or ?period=month (last 12 months).
-    /// </summary>
-    [HttpGet("{category}/Trend")]
-    public async Task<IActionResult> GetTrend(string category, [FromQuery] string period = "day")
-    {
-        try
-        {
-            var accessCheck = CheckCategoryAccess(category);
-            if (accessCheck != null) return accessCheck;
-
-            var (userIdClaim, isSuperAdmin) = ResolveIdentity();
-            var data = await _dashboardService.GetReminderTrendAsync(category, period, userIdClaim, isSuperAdmin);
-            return Ok(data);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Unauthorized(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while processing your request.", details = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Full detailed list of overdue/at-risk rows for the category - drives
-    /// the detailed table on that category's dashboard page.
-    /// </summary>
-    [HttpGet("{category}/OverdueDetail")]
-    public async Task<IActionResult> GetOverdueDetail(string category)
-    {
-        try
-        {
-            var accessCheck = CheckCategoryAccess(category);
-            if (accessCheck != null) return accessCheck;
-
-            var (userIdClaim, isSuperAdmin) = ResolveIdentity();
-            var data = await _dashboardService.GetOverdueDetailAsync(category, userIdClaim, isSuperAdmin);
-            return Ok(data);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Unauthorized(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while processing your request.", details = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Active/inactive rule_alert_configuration counts by alert_type for the
-    /// category - not user-scoped, since rule configuration is global data.
-    /// </summary>
-    [HttpGet("{category}/RuleHealth")]
-    public async Task<IActionResult> GetRuleHealth(string category)
-    {
-        try
-        {
-            var accessCheck = CheckCategoryAccess(category);
-            if (accessCheck != null) return accessCheck;
-
-            var data = await _dashboardService.GetRuleHealthAsync(category);
-            return Ok(data);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while processing your request.", details = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Combined insights for the category dashboard: aging buckets, top-10
-    /// at-risk entities, status breakdown, paused-reminders count, and the 5
-    /// most recently resolved rows. See IDashboardService.GetInsightsAsync
-    /// for what each field means per category.
-    /// </summary>
-    [HttpGet("{category}/Insights")]
-    public async Task<IActionResult> GetInsights(string category)
-    {
-        try
-        {
-            var accessCheck = CheckCategoryAccess(category);
-            if (accessCheck != null) return accessCheck;
-
-            var (userIdClaim, isSuperAdmin) = ResolveIdentity();
-            var data = await _dashboardService.GetInsightsAsync(category, userIdClaim, isSuperAdmin);
-            return Ok(data);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Unauthorized(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while processing your request.", details = ex.Message });
-        }
-    }
-
-    /// <summary>
     /// Real send/reply history for one record - powers the Journey expand
     /// panel on the Overdue Detail table (notification_log + inbound_messages,
     /// ordered chronologically). ?id is the category view's row id (same id
@@ -207,12 +90,12 @@ public class DashboardController : ControllerBase
     /// authenticated role sees this, same as the page it backs).
     /// </summary>
     [HttpGet("LoginSummary")]
-    public async Task<IActionResult> GetLoginSummary()
+    public async Task<IActionResult> GetLoginSummary([FromQuery] int branchId = 0)
     {
         try
         {
             var (userIdClaim, isSuperAdmin) = ResolveIdentity();
-            var data = await _dashboardService.GetLoginSummaryAsync(userIdClaim, isSuperAdmin);
+            var data = await _dashboardService.GetLoginSummaryAsync(userIdClaim, isSuperAdmin, branchId);
             return Ok(data);
         }
         catch (ArgumentException ex)
@@ -236,12 +119,12 @@ public class DashboardController : ControllerBase
     /// tileKey itself picks Finance vs Purchase internally).
     /// </summary>
     [HttpGet("TileDetail/{tileKey}")]
-    public async Task<IActionResult> GetTileDetail(string tileKey)
+    public async Task<IActionResult> GetTileDetail(string tileKey, [FromQuery] int branchId = 0)
     {
         try
         {
             var (userIdClaim, isSuperAdmin) = ResolveIdentity();
-            var data = await _dashboardService.GetTileDetailAsync(tileKey, userIdClaim, isSuperAdmin);
+            var data = await _dashboardService.GetTileDetailAsync(tileKey, userIdClaim, isSuperAdmin, branchId);
             return Ok(data);
         }
         catch (ArgumentException ex)
@@ -271,16 +154,21 @@ public class DashboardController : ControllerBase
 
     /// <summary>
     /// Category-level access check, distinct from the userid ownership
-    /// scoping in ResolveIdentity(). Only 'User'-role accounts with a
-    /// non-empty categories claim are restricted; Admin/SuperAdmin and
-    /// Users with no explicit allowlist are always permitted (fail-open),
-    /// so existing accounts created before this feature aren't locked out.
-    /// Returns null when access is allowed, or a 403 result when denied.
+    /// scoping in ResolveIdentity(). 'User' and 'Admin' role accounts with a
+    /// non-empty categories claim are restricted (Admin added alongside
+    /// AllowedCategories becoming selectable for Admin in the user
+    /// creation/edit forms - was 'User'-only before); SuperAdmin and any
+    /// restrictable account with no explicit allowlist are always permitted
+    /// (fail-open), so existing accounts created before this feature aren't
+    /// locked out. Returns null when access is allowed, or a 403 result when
+    /// denied.
     /// </summary>
     private IActionResult? CheckCategoryAccess(string category)
     {
-        bool isUser = string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "User", StringComparison.OrdinalIgnoreCase);
-        if (!isUser)
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        bool isRestrictable = string.Equals(role, "User", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
+        if (!isRestrictable)
         {
             return null;
         }

@@ -10,9 +10,13 @@ namespace SmartWorkerAutomation.DataProvider.Automation;
 /// purchase_view; no email/WhatsApp send logic here, pure CRUD.</summary>
 public interface ICustomerEnquiryService
 {
-    Task<IReadOnlyList<CustomerEnquiry>> ListAsync(CustomerEnquiryListFilter filter);
     Task<CustomerEnquiry?> GetByIdAsync(int id);
-    Task<CustomerEnquiry> CreateAsync(CreateCustomerEnquiryRequest request, string? createdBy);
+    /// <summary>userId is the caller's own numeric "User"."UserId" (JWT
+    /// sub/NameIdentifier claim), stamped onto the new row's user_id column
+    /// server-side - never taken from the request body, same non-spoofable
+    /// pattern createdBy already follows. See Database/
+    /// add_customer_enquiry_user_id.sql.</summary>
+    Task<CustomerEnquiry> CreateAsync(CreateCustomerEnquiryRequest request, string? createdBy, int? userId);
     Task<CustomerEnquiry?> UpdateAsync(UpdateCustomerEnquiryRequest request, string? updatedBy);
     Task<CustomerEnquiry?> SetActiveAsync(int id, bool isActive, string? updatedBy);
 }

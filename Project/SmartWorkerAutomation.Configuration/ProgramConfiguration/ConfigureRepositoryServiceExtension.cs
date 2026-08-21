@@ -60,7 +60,6 @@ public static class ConfigureRepositoryServiceExtension
         services.AddScoped<ICustomerEnquiryService, CustomerEnquiryService>();
         services.AddScoped<ICustomerEnquiryImportService, CustomerEnquiryImportService>();
 
-        services.AddHttpClient<N8nIngestionClient>();
         services.AddHttpClient<IWhatsAppService, WhatsAppService>();
         services.AddHttpClient<IReplyClassificationService, ReplyClassificationService>();
         services.AddHttpClient<IFirebasePushService, FirebasePushService>();

@@ -9,13 +9,10 @@ public class RegisterRequest
     public string? RedirectUrl { get; set; }
     public int UserTypeId { get; set; }
     /// <summary>
-    /// Category allowlist - only meaningful/persisted when UserTypeId is the
-    /// 'User' role; ignored for Admin/SuperAdmin.
+    /// Category allowlist - only meaningful/persisted when UserTypeId is
+    /// 'User' or 'Admin'; ignored for SuperAdmin.
     /// </summary>
     public string[]? AllowedCategories { get; set; }
-
-    //public int RoleId { get; set; }
-    //public int AccessTypeId { get; set; }
 
     public int OrgId { get; set; }
 

@@ -16,5 +16,16 @@ namespace SmartWorkerAutomation.DataProvider.Automation;
 public interface ICustomerEnquiryImportService
 {
     byte[] BuildTemplateWorkbook();
-    Task<CustomerEnquiryImportResult> ImportAsync(Stream fileStream, string fileName, string? importedBy);
+
+    /// <summary>userId/branchId are stamped onto every inserted row's
+    /// user_id/branch_id columns - both resolved server-side by the caller
+    /// (CustomerEnquiryImportController) from the caller's JWT / the
+    /// branch-picker selection sent alongside the file, same as the
+    /// single-row Create path (CustomerEnquiryService.CreateAsync). Before
+    /// this, the bulk-import Insert call didn't pass either at all (nor
+    /// several of the other pipeline-field columns Insert requires), so
+    /// every uploaded row silently got no branch/owner attribution - see
+    /// this method's implementation for the full column list that was
+    /// missing.</summary>
+    Task<CustomerEnquiryImportResult> ImportAsync(Stream fileStream, string fileName, string? importedBy, int? userId, int? branchId);
 }

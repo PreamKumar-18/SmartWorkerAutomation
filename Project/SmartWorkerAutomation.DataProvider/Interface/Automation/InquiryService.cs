@@ -46,6 +46,54 @@ public class InquiryService : IInquiryService
     };
 
     /// <summary>
+    /// The 5 branch-scoped business categories, each backed by its own
+    /// fn_get_{category}_records(...) Postgres function (see
+    /// Database/phase1_get_records_functions.sql) - branch/user scoping,
+    /// sort, filter, and pagination all live inside the function now, not
+    /// here. Function names only ever come from this hardcoded map, never
+    /// from the raw category argument, before being interpolated into SQL -
+    /// same "structural, never raw user input" rule Queries.json's own
+    /// {ViewName}/{Token} substitutions already rely on. Categories not in
+    /// this map (ruleconfiguration, filetracking) fall back to
+    /// GetInquiryDataLegacyAsync, unaffected by this migration.
+    /// </summary>
+    private static readonly Dictionary<string, string> CategoryToFunctionMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        { "finance", "fn_get_finance_records" },
+        { "purchase", "fn_get_purchase_records" },
+        { "inventory", "fn_get_inventory_records" },
+        { "dispatch", "fn_get_dispatch_records" },
+        { "production", "fn_get_production_records" },
+        // Sale (customer_enquiries) - not an automation_records category, but
+        // reuses this exact same generic get/count-records pattern so the
+        // Sale list can share the frontend's server-side pagination/sort/
+        // filter machinery instead of a bespoke one. See
+        // Database/fn_get_customer_enquiry_records.sql - that function
+        // aliases its columns to the CustomerEnquiry model's camelCase names
+        // (unlike the 5 above, which return each view's raw column names),
+        // since customer_enquiries also has an older, still-in-use camelCase
+        // consumer (CustomerEnquiryController's create/update/getById).
+        { "customerenquiry", "fn_get_customer_enquiry_records" },
+    };
+
+    /// <summary>
+    /// Count-only companion to CategoryToFunctionMap - see
+    /// Database/phase1b_count_records_functions.sql. Kept as an explicit map
+    /// rather than string-replacing "fn_get_" -> "fn_count_" on the list
+    /// function name, since these names get interpolated into SQL text and
+    /// an explicit allowlist is clearer to audit than a derived one.
+    /// </summary>
+    private static readonly Dictionary<string, string> CategoryToCountFunctionMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        { "finance", "fn_count_finance_records" },
+        { "purchase", "fn_count_purchase_records" },
+        { "inventory", "fn_count_inventory_records" },
+        { "dispatch", "fn_count_dispatch_records" },
+        { "production", "fn_count_production_records" },
+        { "customerenquiry", "fn_count_customer_enquiry_records" },
+    };
+
+    /// <summary>
     /// Server-side mirror of each category's editable RecordFieldDef entries
     /// in the frontend's records-field-schema.ts (editable: true only) - the
     /// allowlist that decides which keys in an UpdateRecordAsync `changes`
@@ -106,46 +154,125 @@ public class InquiryService : IInquiryService
         _pushService = pushService;
     }
 
-    public async Task<IEnumerable<dynamic>> GetInquiryDataAsync(string category, string userIdClaim, bool isSuperAdmin, int[]? branchIds)
+    public async Task<IEnumerable<dynamic>> GetInquiryDataAsync(
+        string category,
+        string userIdClaim,
+        bool isSuperAdmin,
+        int branchId = 0,
+        string? sortColumn = null,
+        string? sortDir = null,
+        string? filtersJson = null,
+        int? page = null,
+        int? pageSize = null)
     {
         if (string.IsNullOrWhiteSpace(category))
         {
             throw new ArgumentException("Category is required.");
         }
 
-        if (!CategoryToViewMap.TryGetValue(category.Trim(), out var viewName))
+        var normalizedCategory = category.Trim();
+
+        if (!CategoryToFunctionMap.TryGetValue(normalizedCategory, out var functionName))
+        {
+            return await GetInquiryDataLegacyAsync(normalizedCategory, userIdClaim, isSuperAdmin);
+        }
+
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            throw new UnauthorizedAccessException("Invalid user ID in token.");
+        }
+
+        using var connection = _connectionFactory.CreateConnection();
+
+        var sql = _queryStore.Render("Inquiry:GetRecords", new Dictionary<string, string> { ["FunctionName"] = functionName });
+
+        int? limit = (pageSize.HasValue && pageSize.Value > 0) ? pageSize.Value : (int?)null;
+        int offset = (limit.HasValue && page.HasValue && page.Value > 1) ? (page.Value - 1) * limit.Value : 0;
+
+        return await connection.QueryAsync(sql, new
+        {
+            UserId = userId,
+            IsSuperAdmin = isSuperAdmin,
+            BranchId = branchId,
+            SortColumn = string.IsNullOrWhiteSpace(sortColumn) ? "id" : sortColumn,
+            SortDir = string.IsNullOrWhiteSpace(sortDir) ? "desc" : sortDir,
+            Filters = filtersJson,
+            Limit = limit,
+            Offset = offset,
+        });
+    }
+
+    /// <summary>
+    /// Pre-migration fallback for categories that don't have a
+    /// fn_get_{category}_records function yet - currently just
+    /// ruleconfiguration (GlobalCategories, always unfiltered) and
+    /// filetracking. filetracking's view has no branch_id column, so the
+    /// old branch-array-filtered path for a non-superadmin, non-global
+    /// category was never actually reachable in a working state anyway
+    /// (Inquiry:GetAllByBranch would have errored on a missing column) -
+    /// simplified here to plain userid filtering instead of resurrecting
+    /// that broken branch clause. Revisit if filetracking ever needs real
+    /// branch scoping.
+    /// </summary>
+    private async Task<IEnumerable<dynamic>> GetInquiryDataLegacyAsync(string category, string userIdClaim, bool isSuperAdmin)
+    {
+        if (!CategoryToViewMap.TryGetValue(category, out var viewName))
         {
             throw new ArgumentException($"Invalid category: '{category}'. Allowed categories are: {string.Join(", ", CategoryToViewMap.Keys)}");
         }
 
         using var connection = _connectionFactory.CreateConnection();
-        bool isPurchase = category.Trim() == "purchase";
-        
 
-        if (isSuperAdmin || GlobalCategories.Contains(category.Trim()))
+        if (isSuperAdmin || GlobalCategories.Contains(category))
         {
-            string queryKey = isPurchase ? "Inquiry:GetAllWithJoin" : "Inquiry:GetAll";
-            var sql = _queryStore.Render(queryKey, new Dictionary<string, string> { ["ViewName"] = viewName });
+            var sql = _queryStore.Render("Inquiry:GetAll", new Dictionary<string, string> { ["ViewName"] = viewName });
             return await connection.QueryAsync(sql);
         }
-        else
-        {
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            {
-                throw new UnauthorizedAccessException("Invalid user ID in token.");
-            }
-            if (branchIds is null || branchIds.Length == 0)
-            {
-                // No branches mapped to this user at all - correctly see
-                // nothing, rather than silently falling through to
-                // unfiltered/all data.
-                return Enumerable.Empty<dynamic>();
-            }
 
-            var queryKey = isPurchase ? "Inquiry:GetAllWithJoinByBranch" : "Inquiry:GetAllByBranch";
-            var sql = _queryStore.Render(queryKey, new Dictionary<string, string> { ["ViewName"] = viewName });
-            return await connection.QueryAsync(sql, new { BranchIds = branchIds });
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            throw new UnauthorizedAccessException("Invalid user ID in token.");
         }
+
+        var byUserSql = _queryStore.Render("Inquiry:GetByUser", new Dictionary<string, string> { ["ViewName"] = viewName });
+        return await connection.QueryAsync(byUserSql, new { UserId = userId });
+    }
+
+    public async Task<int> GetInquiryCountAsync(
+        string category,
+        string userIdClaim,
+        bool isSuperAdmin,
+        int branchId = 0,
+        string? filtersJson = null)
+    {
+        if (string.IsNullOrWhiteSpace(category))
+        {
+            throw new ArgumentException("Category is required.");
+        }
+
+        var normalizedCategory = category.Trim();
+
+        if (!CategoryToCountFunctionMap.TryGetValue(normalizedCategory, out var functionName))
+        {
+            throw new ArgumentException($"Invalid category: '{category}'. Allowed categories are: {string.Join(", ", CategoryToCountFunctionMap.Keys)}");
+        }
+
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            throw new UnauthorizedAccessException("Invalid user ID in token.");
+        }
+
+        using var connection = _connectionFactory.CreateConnection();
+
+        var sql = _queryStore.Render("Inquiry:CountRecords", new Dictionary<string, string> { ["FunctionName"] = functionName });
+
+        return await connection.ExecuteScalarAsync<int>(sql, new
+        {
+            UserId = userId,
+            IsSuperAdmin = isSuperAdmin,
+            BranchId = branchId,
+            Filters = filtersJson,
+        });
     }
 
     public async Task<dynamic?> GetRecordByIdAsync(string category, int id, string userIdClaim, bool isSuperAdmin)

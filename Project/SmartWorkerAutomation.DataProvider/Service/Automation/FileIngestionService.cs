@@ -13,17 +13,15 @@ using SmartWorkerAutomation.Core.Repository.Automation;
 namespace SmartWorkerAutomation.DataProvider.Automation;
 
 /// <summary>
-/// Native port of the n8n "Generic Ingestion (All Categories) webhook" +
-/// "Generic Sync &amp; Calc (All Categories)" workflows. Sits behind
-/// Ingestion:UseNativePipeline in appsettings.json (default false) -
-/// IngestionController picks this or N8nIngestionClient based on that flag,
-/// so the n8n path stays the default/fallback until this has been proven
-/// against a real upload.
+/// Native ingestion pipeline - the only ingestion path now that n8n has
+/// been fully decommissioned. (Originally built as a native port of n8n's
+/// "Generic Ingestion (All Categories) webhook" + "Generic Sync &amp; Calc
+/// (All Categories)" workflows, behind an Ingestion:UseNativePipeline flag
+/// with N8nIngestionClient as the fallback; both the flag and the n8n
+/// client have since been removed - IngestionController.UploadFile calls
+/// this unconditionally.)
 ///
-/// Faithfully replicates each n8n step so the shared stored procedures
-/// (bulk_insert_automation_staging_ui, update_automation_overdue) - whose
-/// bodies this project has no visibility into - see the exact same call
-/// shape they always have; nothing on the DB side changes for those two:
+/// Calls the same stored procedures n8n's workflow used, same shapes:
 ///   1. INSERT INTO file_tracking(...) RETURNING id.
 ///   2. For each (category_name, sheet_name) in category_field_mapping,
 ///      try to read that sheet from the workbook. A missing sheet just
@@ -31,37 +29,36 @@ namespace SmartWorkerAutomation.DataProvider.Automation;
 ///      include every category.
 ///   3. Per row: drop rows where every non-reserved field is blank, tag
 ///      with __row_number__ (Excel row number) and __ingest_status__
-///      (null) - same reserved keys n8n's "Add Reserved Keys" step adds.
+///      (null).
 ///   4. Merge every non-skipped category's rows into one JSON object and
-///      CALL bulk_insert_automation_staging_ui(file_id, payload::jsonb, submitted_by).
+///      CALL bulk_insert_automation_staging_ui(file_id, payload::jsonb, submitted_by, branch_id).
 ///   5. Mark same-file/category/natural_key duplicates (keeping the first
 ///      inserted row) and mark file_tracking completed.
 ///
-///      Deliberately stops there now - it no longer calls
-///      sync_automation_staging_ui_for_user/update_automation_overdue
-///      itself. Every native upload must go through the staging review gate
-///      (StagingReviewService/IngestionController's review endpoints)
-///      before anything is promoted into automation_records;
-///      StagingReviewService.ConfirmAsync is what eventually calls
-///      sync_automation_staging_ui_for_user, once the user has
-///      downloaded/looked at the classification and confirmed. The
-///      response status below is "staged", not "accepted", so the frontend
-///      knows to open the review dialog instead of showing a plain success
-///      toast.
+///      Deliberately stops there - it does not call any sync/promote
+///      procedure itself. Every native upload must go through the staging
+///      review gate (StagingReviewService/IngestionController's review
+///      endpoints) before anything is promoted into automation_records.
+///      The response status below is "staged", not "accepted", so the
+///      frontend knows to open the review dialog instead of showing a
+///      plain success toast.
 ///
-///      sync_automation_staging_ui_for_user is a NEW, separate procedure
-///      (Database/sync_automation_staging_ui_per_user.sql) - not the
-///      original sync_automation_staging_ui n8n's batch workflow still
-///      calls unmodified. n8n stages/syncs every pending user's files
-///      together in one daily run with no single "the user" to scope to;
-///      this pipeline processes one user's one upload per request, so it
-///      needed its own per-user-scoped version rather than sharing n8n's.
+///      StagingReviewService.ConfirmAsync is what promotes staged rows,
+///      via Config/Queries.json's Ingestion:SyncStaging key - which calls
+///      sync_automation_records_all_flows(p_userid, p_fileid), NOT
+///      sync_automation_staging_ui_for_user. (sync_automation_staging_ui_for_user,
+///      Database/sync_automation_staging_ui_per_user.sql, exists in the DB
+///      but is currently unused/dead - nothing in this codebase calls it.
+///      The original n8n-only sync_automation_staging_ui, the batch
+///      procedure n8n's daily workflow used to call, is also dead now that
+///      n8n is decommissioned.)
 ///
-/// One deliberate improvement over the n8n version: n8n's generic xlsx
-/// extractor loses type info, so it manually reverses Excel's date-serial
-/// epoch math for any "_date"-suffixed column. Reading directly via
-/// ClosedXML exposes real date-formatted cells, so date cells are just
-/// formatted as yyyy-MM-dd - no serial-number hack needed.
+/// One deliberate improvement over the n8n version: a generic xlsx
+/// extractor typically loses type info and needs to manually reverse
+/// Excel's date-serial epoch math for date-suffixed columns. Reading
+/// directly via ClosedXML exposes real date-formatted cells instead, so
+/// date cells are just formatted as yyyy-MM-dd - no serial-number hack
+/// needed.
 /// </summary>
 public class FileIngestionService : IFileIngestionService
 {
@@ -91,7 +88,7 @@ public class FileIngestionService : IFileIngestionService
         _queryStore = queryStore;
     }
 
-    public async Task<N8nIngestionResponse> IngestAsync(Stream fileStream, string fileName, string? userId, IReadOnlyCollection<string>? allowedCategories)
+    public async Task<N8nIngestionResponse> IngestAsync(Stream fileStream, string fileName, string? userId, IReadOnlyCollection<string>? allowedCategories, int branchId)
     {
         using var connection = _connectionFactory.CreateConnection();
 
@@ -139,6 +136,7 @@ public class FileIngestionService : IFileIngestionService
             FileId = fileId,
             Payload = JsonSerializer.Serialize(payload),
             SubmittedBy = submittedBy,
+            BranchId = branchId,
         });
 
         await connection.ExecuteAsync(_queryStore.Get("Ingestion:MarkDuplicates"), new { FileId = fileId });
