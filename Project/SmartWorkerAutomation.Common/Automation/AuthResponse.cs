@@ -6,5 +6,6 @@ public class AuthResponse
     public string Message { get; set; } = string.Empty;
     public string? Token { get; set; }
     public User? User { get; set; }
+    public OrganisationSummary? Organisation { get; set; }
     public List<UserBranchSummary>? Branches { get; set; }
 }

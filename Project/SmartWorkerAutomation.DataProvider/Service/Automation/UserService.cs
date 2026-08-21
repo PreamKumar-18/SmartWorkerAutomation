@@ -158,8 +158,13 @@ public class UserService : IUserService
             return new AuthResponse { Success = false, Message = "User account is not fully provisioned. Contact support." };
         }
 
-        // NEW - fetch this user's branch access (or all branches, if SuperAdmin)
-        bool isSuperAdmin = string.Equals(tenantContext.User.RoleName, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+        // Role now lives in tenant User.RoleId, not master - resolve it here
+        // instead of tenantContext.User.RoleName (removed from master).
+        var roleQuery = _queryStore.Get("Branch:GetUserRoleNameById");
+        var roleName = await tenantConnection.QuerySingleOrDefaultAsync<string>(roleQuery, new { UserId = tenantUser.UserId });
+        bool isSuperAdmin = string.Equals(roleName, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+
+        // Branch access (or all branches, if SuperAdmin)
         var branchQueryKey = isSuperAdmin ? "Branch:GetAllActiveBranches" : "Branch:GetBranchesForUser";
         var branchSql = _queryStore.Get(branchQueryKey);
         var branches = await tenantConnection.QueryAsync<UserBranchSummary>(branchSql, new { UserId = tenantUser.UserId });
@@ -167,7 +172,20 @@ public class UserService : IUserService
         tenantUser.Password = string.Empty;
         var token = _tokenService.GenerateToken(tenantUser, tenantContext.User, branches);
 
-        return new AuthResponse { Success = true, Message = "Login successful.", User = tenantUser, Token = token, Branches = branches.ToList() };
+        return new AuthResponse
+        {
+            Success = true,
+            Message = "Login successful.",
+            User = tenantUser,
+            Token = token,
+            Branches = branches.ToList(),
+            Organisation = new OrganisationSummary // NEW
+            {
+                OrgId = tenantContext.Organisation.Id,
+                Name = tenantContext.Organisation.Name,
+                CompanyDetails = tenantContext.Organisation.CompanyDetails
+            }
+        };
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, int orgId, int roleId)
