@@ -147,7 +147,9 @@ public class DashboardController : ControllerBase
                           ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         bool isSuperAdmin = User.IsInRole("SuperAdmin")
-                            || string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+                 || string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "SuperAdmin", StringComparison.OrdinalIgnoreCase)
+                 || User.IsInRole("Admin")
+                 || string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "Admin", StringComparison.OrdinalIgnoreCase);
 
         return (userIdClaim ?? string.Empty, isSuperAdmin);
     }

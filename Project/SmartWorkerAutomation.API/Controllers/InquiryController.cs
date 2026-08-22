@@ -54,12 +54,14 @@ public class InquiryController : ControllerBase
                               ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             bool isSuperAdmin = User.IsInRole("SuperAdmin")
-                                || string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+                    || string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "SuperAdmin", StringComparison.OrdinalIgnoreCase)
+                    || User.IsInRole("Admin")
+                    || string.Equals(User.FindFirst(ClaimTypes.Role)?.Value, "Admin", StringComparison.OrdinalIgnoreCase);
 
             var categoriesClaim = User.FindFirst("categories")?.Value;
             var allowedCategories = string.IsNullOrEmpty(categoriesClaim)
                 ? null
-                : categoriesClaim.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                : categoriesClaim.Split(',', StringSplitOptions.RemoveEmptyEntries);    
 
             var data = await _inquiryService.GetInquiryDataAsync(
                 category, userIdClaim ?? string.Empty, isSuperAdmin,
