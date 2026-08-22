@@ -42,6 +42,7 @@ public class UserService : IUserService
     public async Task<IEnumerable<User>> GetUsersEnquiryAsync(
     int requestingUserId,
     string requestingUserRole,
+    string[]? requestingUserAllowedCategories, // NEW - from JWT categories claim
     int branchId = 0,
     string? sortColumn = null,
     string? sortDir = null,
@@ -57,41 +58,30 @@ public class UserService : IUserService
             throw new UnauthorizedAccessException("You are not authorized to view the user list.");
         }
 
-        // Always go through the common resolver - null means SuperAdmin/no
-        // restriction, an array means "these are the branches this user can
-        // see" (empty array = sees nothing).
         var accessible = await _branchService.GetAccessibleBranchIdsAsync(requestingUserId);
 
         int[]? branchIdsToPass;
-
         if (branchId != 0)
         {
-            // A specific branch was requested - must be validated against the
-            // caller's own access, UNLESS they have no restriction at all
-            // (accessible == null, i.e. SuperAdmin).
-            if (accessible is null)
-            {
-                branchIdsToPass = new[] { branchId }; // SuperAdmin - trusted as-is
-            }
-            else if (accessible.Contains(branchId))
-            {
-                branchIdsToPass = new[] { branchId }; // Admin/User - allowed, they have this branch
-            }
-            else
-            {
-                return Enumerable.Empty<User>(); // requested a branch they don't have access to
-            }
+            if (accessible is null) branchIdsToPass = new[] { branchId };
+            else if (accessible.Contains(branchId)) branchIdsToPass = new[] { branchId };
+            else return Enumerable.Empty<User>();
         }
         else
         {
-            // No specific branch requested - use their full accessible set
-            // (null = no filter for SuperAdmin, array = their mapped branches).
-            if (accessible is not null && accessible.Length == 0)
-            {
-                return Enumerable.Empty<User>(); // Admin/User mapped to zero branches -> sees nothing
-            }
+            if (accessible is not null && accessible.Length == 0) return Enumerable.Empty<User>();
             branchIdsToPass = accessible;
         }
+
+        // SuperAdmin: no category restriction, sees everyone regardless of
+        // category. Admin: restricted to overlap with their own AllowedCategories.
+        string[]? adminCategoriesToPass = isSuperAdmin ? null : requestingUserAllowedCategories;
+
+        // Admin never sees themself; SuperAdmin has no such restriction (they
+        // may legitimately want to see/manage their own row via a different
+        // screen, and this list already excludes SuperAdmin rows for Admin
+        // callers anyway).
+        int? excludeUserId = isAdmin ? requestingUserId : (int?)null;
 
         using var connection = _connectionFactory.CreateConnection();
         var sql = _queryStore.Get("User:GetUserRecords");
@@ -102,9 +92,11 @@ public class UserService : IUserService
         return await connection.QueryAsync<User>(sql, new
         {
             BranchIds = branchIdsToPass,
+            AdminCategories = adminCategoriesToPass,
+            ExcludeUserId = excludeUserId,
             SortColumn = string.IsNullOrWhiteSpace(sortColumn) ? "UserId" : sortColumn,
             SortDir = string.IsNullOrWhiteSpace(sortDir) ? "desc" : sortDir,
-            Filters = string.IsNullOrWhiteSpace(filtersJson) ? null : filtersJson, // guard here
+            Filters = filtersJson,
             Limit = limit,
             Offset = offset,
         });

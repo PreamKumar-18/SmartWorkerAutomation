@@ -26,5 +26,5 @@ public interface IUserService
     /// </summary>
     Task<DeviceRegistrationResponse> RegisterDeviceAsync(int userId, RegisterDeviceRequest request);
     // IUserService
-    Task<IEnumerable<User>> GetUsersEnquiryAsync(int requestingUserId, string requestingUserRole, int branchId = 0, string? sortColumn = null, string? sortDir = null, string? filtersJson = null, int? page = null, int? pageSize = null);
+    Task<IEnumerable<User>> GetUsersEnquiryAsync(int requestingUserId, string requestingUserRole, string[]? requestingUserAllowedCategories, int branchId = 0, string? sortColumn = null, string? sortDir = null, string? filtersJson = null, int? page = null, int? pageSize = null);
 }

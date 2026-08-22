@@ -98,7 +98,7 @@
       "GetAllUsers": "SELECT * FROM \"User\" a ORDER BY a.\"UserId\"",
       "InsertUserBranch": "INSERT INTO user_branch (\"UserId\", branch_id, is_primary) VALUES (@UserId, @BranchId, @IsPrimary) ON CONFLICT (\"UserId\", branch_id) DO NOTHING",
       "UpsertDevice": "INSERT INTO user_device\n    (user_id, device_id, push_token, platform, device_model, os_version, app_version, last_login_at, created_at, updated_at)\nVALUES\n    (@p_userid, @p_deviceid, @p_pushtoken, @p_platform, @p_devicemodel, @p_osversion, @p_appversion, now(), now(), now())\nON CONFLICT (user_id, device_id) DO UPDATE SET\n    push_token = EXCLUDED.push_token,\n    platform = EXCLUDED.platform,\n    device_model = EXCLUDED.device_model,\n    os_version = EXCLUDED.os_version,\n    app_version = EXCLUDED.app_version,\n    last_login_at = now(),\n    updated_at = now()",
-      "GetUserRecords": "SELECT * FROM fn_get_user_records(@BranchIds, @SortColumn, @SortDir, @Filters::jsonb, @Limit, @Offset)"
+      "GetUserRecords": "SELECT * FROM fn_get_user_records(@BranchIds, @AdminCategories, @ExcludeUserId, @SortColumn, @SortDir, @Filters::jsonb, @Limit, @Offset)"
     },
 
     "RecordsExport": {

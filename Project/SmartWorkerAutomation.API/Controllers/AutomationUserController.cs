@@ -142,6 +142,13 @@ public class UserController : ControllerBase
     [FromQuery] int? page = null,
     [FromQuery] int? pageSize = null)
     {
+
+        var categoriesClaim = User.FindFirst("categories")?.Value;
+        var allowedCategories = string.IsNullOrEmpty(categoriesClaim)
+            ? null
+            : categoriesClaim.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+        
         var userIdClaim = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
                            ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!int.TryParse(userIdClaim, out var requestingUserId))
@@ -153,7 +160,7 @@ public class UserController : ControllerBase
 
         try
         {
-            var users = await _userService.GetUsersEnquiryAsync(requestingUserId, roleName, branchId, sortColumn, sortDir, filters, page, pageSize);
+            var users = await _userService.GetUsersEnquiryAsync(requestingUserId, roleName, allowedCategories, branchId, sortColumn, sortDir, filters, page, pageSize);
             foreach (var u in users) u.Password = string.Empty;
             return Ok(users);
         }
