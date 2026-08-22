@@ -46,6 +46,40 @@ public class MasterAuthRepository : IMasterAuthRepository
         return rows;
     }
 
+    public async Task<int?> GetOrgIdByWebhookPhoneNumberAsync(string webhookPhoneNumber)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var query = _queryStore.Get("MasterAuth:GetOrgIdByWebhookPhoneNumber");
+        return await connection.QuerySingleOrDefaultAsync<int?>(query, new { WebhookPhoneNumber = webhookPhoneNumber });
+    }
+
+    public async Task UpdateOrganisationSendCredentialsAsync(
+        int orgId,
+        string? whatsAppAccessToken,
+        string? whatsAppPhoneNumberId,
+        string? smtpHost,
+        int? smtpPort,
+        string? smtpUsername,
+        string? smtpPassword,
+        string? smtpFromEmail,
+        string? smtpFromName)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var query = _queryStore.Get("MasterAuth:UpdateOrganisationSendCredentials");
+        await connection.ExecuteAsync(query, new
+        {
+            OrgId = orgId,
+            WhatsAppAccessToken = whatsAppAccessToken,
+            WhatsAppPhoneNumberId = whatsAppPhoneNumberId,
+            SmtpHost = smtpHost,
+            SmtpPort = smtpPort,
+            SmtpUsername = smtpUsername,
+            SmtpPassword = smtpPassword,
+            SmtpFromEmail = smtpFromEmail,
+            SmtpFromName = smtpFromName,
+        });
+    }
+
     public async Task<int> InsertOrganisationAsync(string name, string? companyDetailsJson)
     {
         using var connection = _connectionFactory.CreateConnection();

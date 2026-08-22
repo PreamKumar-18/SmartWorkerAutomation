@@ -87,6 +87,8 @@ public class NotificationsService : INotificationsService
 
     private async Task<ReminderSendResponse> SendPendingNotificationLockedAsync(int id, IDbConnection connection)
     {
+        var orgId = _connectionFactory.ResolveOrgId();
+
         var sql = _queryStore.Get("Notifications:GetPendingById");
         var row = await connection.QuerySingleOrDefaultAsync(sql, new { Id = id });
 
@@ -120,7 +122,7 @@ public class NotificationsService : INotificationsService
                     To = clientEmail,
                     Subject = fields.GetString("email_subject") ?? string.Empty,
                     Body = fields.GetString("email_body") ?? string.Empty,
-                });
+                }, orgId);
 
                 emailStatus = emailResult.Status;
                 emailError = emailResult.Error;
@@ -147,7 +149,7 @@ public class NotificationsService : INotificationsService
                 {
                     ClientPhone = clientPhone,
                     Payload = payload.Value,
-                });
+                }, orgId);
 
                 whatsappStatus = whatsappResult.Status;
                 whatsappMessageId = whatsappResult.MessageId;
@@ -211,6 +213,8 @@ public class NotificationsService : INotificationsService
     /// </summary>
     public async Task<WhatsAppSendResponse> SendCustomWhatsAppAsync(int recordId, string category, string phone, string message, string contactName)
     {
+        var orgId = _connectionFactory.ResolveOrgId();
+
         if (string.IsNullOrWhiteSpace(phone))
         {
             return new WhatsAppSendResponse("failed", null, "No phone number supplied.");
@@ -285,7 +289,7 @@ public class NotificationsService : INotificationsService
         {
             ClientPhone = phone,
             Payload = payload,
-        });
+        }, orgId);
 
         // Best-effort, same reasoning as SendPendingNotificationLockedAsync's
         // CaptureSend above - the message already went out (or didn't) by
@@ -331,6 +335,8 @@ public class NotificationsService : INotificationsService
     /// </summary>
     public async Task<EmailSendResponse> SendCustomEmailAsync(int recordId, string category, string to, string subject, string body)
     {
+        var orgId = _connectionFactory.ResolveOrgId();
+
         if (string.IsNullOrWhiteSpace(to))
         {
             return new EmailSendResponse("failed", "No email address supplied.");
@@ -367,7 +373,7 @@ public class NotificationsService : INotificationsService
             To = to,
             Subject = subject,
             Body = body,
-        });
+        }, orgId);
 
         // Best-effort, same reasoning as SendCustomWhatsAppAsync's own log
         // write above - the email already went out (or didn't) by this

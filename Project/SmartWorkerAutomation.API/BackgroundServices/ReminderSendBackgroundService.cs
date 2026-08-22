@@ -61,11 +61,13 @@ namespace SmartWorkerAutomation.API.BackgroundServices;
 public class ReminderSendBackgroundService : BackgroundService
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(1);
-    private static readonly TimeSpan BetweenRecordsDelay = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan DefaultStartTime = new(9, 0, 0);
     private static readonly TimeSpan DefaultEndTime = new(18, 0, 0);
     private static readonly HashSet<DayOfWeek> DefaultActiveDays =
         new() { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday };
+    private const int DefaultBatchSize = 200;
+    private const int DefaultMaxConcurrentSendsPerTenant = 10;
+    private const int DefaultMaxConcurrentTenants = 5;
 
 
     private readonly IQueryStore _queryStore;
@@ -76,6 +78,9 @@ public class ReminderSendBackgroundService : BackgroundService
     private readonly TimeSpan _windowStart;
     private readonly TimeSpan _windowEnd;
     private readonly HashSet<DayOfWeek> _activeDays;
+    private readonly int _batchSize;
+    private readonly int _maxConcurrentSendsPerTenant;
+    private readonly int _maxConcurrentTenants;
 
     public ReminderSendBackgroundService(
         IQueryStore queryStore,
@@ -86,9 +91,28 @@ public class ReminderSendBackgroundService : BackgroundService
         _scopeFactory = scopeFactory;
         _logger = logger;
         _encryptor = encryptor;
+        // Fixed UTC+5:30 offset, not a system/IANA timezone-database lookup -
+        // IST has no DST, and this way it's always correct regardless of
+        // which OS/ICU timezone data (if any) the host has installed. This
+        // field was previously declared but never assigned anywhere in this
+        // class, so IsWithinSendWindow's TimeZoneInfo.ConvertTime call threw
+        // ArgumentNullException("destinationTimeZone") on every single
+        // cycle, unconditionally, in every environment - the send window
+        // check (and therefore every reminder send) never actually ran.
+        _istZone = TimeZoneInfo.CreateCustomTimeZone("IST", TimeSpan.FromHours(5.5), "India Standard Time (Asia/Kolkata)", "India Standard Time (Asia/Kolkata)");
         _windowStart = ResolveTime(configuration, "Automation:ReminderSendWindow:StartTimeIst", DefaultStartTime, logger);
         _windowEnd = ResolveTime(configuration, "Automation:ReminderSendWindow:EndTimeIst", DefaultEndTime, logger);
         _activeDays = ResolveActiveDays(configuration, logger);
+        // Phase 2 throughput settings - replace the old hardcoded 1
+        // record/second serial send with bounded concurrency instead. The
+        // concurrency caps themselves are the rate limit now (roughly
+        // MaxConcurrentSendsPerTenant / round-trip-latency requests per
+        // second per tenant), so there's no separate inter-record delay
+        // anymore - tune these down if a specific org's WhatsApp phone
+        // number tier can't sustain the default.
+        _batchSize = ResolveInt(configuration, "Automation:ReminderSend:BatchSize", DefaultBatchSize, logger);
+        _maxConcurrentSendsPerTenant = ResolveInt(configuration, "Automation:ReminderSend:MaxConcurrentSendsPerTenant", DefaultMaxConcurrentSendsPerTenant, logger);
+        _maxConcurrentTenants = ResolveInt(configuration, "Automation:ReminderSend:MaxConcurrentTenants", DefaultMaxConcurrentTenants, logger);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -142,35 +166,53 @@ public class ReminderSendBackgroundService : BackgroundService
 
         var tenants = await masterAuthRepository.GetAllActiveTenantConnectionsAsync();
 
-        foreach (var tenant in tenants)
+        // Phase 2: tenants processed with bounded concurrency instead of
+        // one at a time - a slow/stuck tenant (network issue, a large
+        // batch) no longer delays every other tenant behind it in the same
+        // cycle. Each tenant call already opens its own scope/connection
+        // (see RunPollCycleForTenantAsync), so running several concurrently
+        // is safe; MaxConcurrentTenants just caps how many run at once.
+        using var tenantThrottle = new SemaphoreSlim(_maxConcurrentTenants);
+
+        var tenantTasks = tenants.Select(async tenant =>
         {
             if (stoppingToken.IsCancellationRequested)
             {
-                break;
+                return;
             }
 
-            string decryptedConnStr;
+            await tenantThrottle.WaitAsync(stoppingToken);
             try
             {
-                decryptedConnStr = _encryptor.Decrypt(tenant.EncryptedConnectionString);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "WF: Reminder Send (Automation) - failed to decrypt connection string for orgid {OrgId}; skipping this tenant this cycle.", tenant.OrgId);
-                continue;
-            }
+                string decryptedConnStr;
+                try
+                {
+                    decryptedConnStr = _encryptor.Decrypt(tenant.EncryptedConnectionString);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "WF: Reminder Send (Automation) - failed to decrypt connection string for orgid {OrgId}; skipping this tenant this cycle.", tenant.OrgId);
+                    return;
+                }
 
-            try
-            {
-                await RunPollCycleForTenantAsync(decryptedConnStr, tenant.OrgId, stoppingToken);
+                try
+                {
+                    await RunPollCycleForTenantAsync(decryptedConnStr, tenant.OrgId, stoppingToken);
+                }
+                catch (Exception ex)
+                {
+                    // One tenant's failure must not stop the cycle for every
+                    // other tenant.
+                    _logger.LogError(ex, "WF: Reminder Send (Automation) - poll cycle failed for orgid {OrgId}; will retry next cycle.", tenant.OrgId);
+                }
             }
-            catch (Exception ex)
+            finally
             {
-                // One tenant's failure must not stop the cycle for every
-                // other tenant.
-                _logger.LogError(ex, "WF: Reminder Send (Automation) - poll cycle failed for orgid {OrgId}; will retry next cycle.", tenant.OrgId);
+                tenantThrottle.Release();
             }
-        }
+        });
+
+        await Task.WhenAll(tenantTasks);
     }
 
     private async Task RunPollCycleForTenantAsync(string tenantConnectionString, int orgId, CancellationToken stoppingToken)
@@ -178,7 +220,7 @@ public class ReminderSendBackgroundService : BackgroundService
         using var connection = new NpgsqlConnection(tenantConnectionString);
 
         var fetchSql = _queryStore.Get("ReminderSend:FetchPending");
-        var fetched = (await connection.QueryAsync(fetchSql)).ToList();
+        var fetched = (await connection.QueryAsync(fetchSql, new { BatchSize = _batchSize })).ToList();
         if (fetched.Count == 0)
         {
             return;
@@ -208,36 +250,42 @@ public class ReminderSendBackgroundService : BackgroundService
         var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
         var whatsAppService = scope.ServiceProvider.GetRequiredService<IWhatsAppService>();
 
-        var results = new List<SendOutcome>(pending.Count);
-        foreach (var fields in pending)
-        {
-            if (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
+        // Phase 2: bounded concurrent dispatch instead of one record per
+        // second, serially - MaxConcurrentSendsPerTenant in-flight sends at
+        // once acts as the rate limit now (roughly N / round-trip-latency
+        // requests/sec), which is both far higher throughput than the old
+        // hardcoded 1/sec ceiling and still bounded so one tenant can't
+        // hammer Meta/SMTP past what its account can actually sustain.
+        using var sendThrottle = new SemaphoreSlim(_maxConcurrentSendsPerTenant);
 
+        var sendTasks = pending.Select(async fields =>
+        {
+            await sendThrottle.WaitAsync(stoppingToken);
             try
             {
-                results.Add(await SendOneAsync(fields, emailService, whatsAppService));
+                return await SendOneAsync(fields, emailService, whatsAppService, orgId);
             }
             catch (Exception ex)
             {
                 // A single malformed row (e.g. missing "id") must not abort
-                // the whole cycle - that would also skip the finalize step
+                // the whole batch - that would also skip the finalize step
                 // for every other, already-sent record in this batch.
                 _logger.LogError(ex, "WF: Reminder Send (Automation) - orgid {OrgId} - failed to process a pending record; skipping it this cycle.", orgId);
+                return null;
             }
-
-            try
+            finally
             {
-                await Task.Delay(BetweenRecordsDelay, stoppingToken);
+                sendThrottle.Release();
             }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-        }
+        });
 
+        var sendOutcomes = await Task.WhenAll(sendTasks);
+        var results = sendOutcomes.Where(r => r is not null).Select(r => r!).ToList();
+
+        // Finalize stays sequential - it's local Postgres writes on this
+        // one shared connection (not Meta/SMTP round trips), so it's not
+        // the bottleneck, and NpgsqlConnection isn't safe for concurrent
+        // commands on the same instance.
         foreach (var result in results)
         {
             await FinalizeAsync(connection, result);
@@ -284,6 +332,23 @@ public class ReminderSendBackgroundService : BackgroundService
         return fallback;
     }
 
+    private static int ResolveInt(IConfiguration configuration, string key, int fallback, ILogger logger)
+    {
+        var configured = configuration[key];
+        if (string.IsNullOrWhiteSpace(configured))
+        {
+            return fallback;
+        }
+
+        if (int.TryParse(configured, out var parsed) && parsed > 0)
+        {
+            return parsed;
+        }
+
+        logger.LogWarning("{Key} value '{Configured}' is not a valid positive integer - falling back to {Fallback}.", key, configured, fallback);
+        return fallback;
+    }
+
     private static HashSet<DayOfWeek> ResolveActiveDays(IConfiguration configuration, ILogger logger)
     {
         var configuredDays = configuration.GetSection("Automation:ReminderSendWindow:ActiveDays").Get<string[]>();
@@ -311,7 +376,8 @@ public class ReminderSendBackgroundService : BackgroundService
     private static async Task<SendOutcome> SendOneAsync(
         IDictionary<string, object> fields,
         IEmailService emailService,
-        IWhatsAppService whatsAppService)
+        IWhatsAppService whatsAppService,
+        int orgId)
     {
         var id = Convert.ToInt32(fields["id"]);
         var ruleName = fields.GetString("rule_name");
@@ -346,7 +412,7 @@ public class ReminderSendBackgroundService : BackgroundService
                         To = clientEmail,
                         Subject = emailSubject ?? string.Empty,
                         Body = emailBody ?? string.Empty,
-                    });
+                    }, orgId);
                     emailStatus = result.Status;
                 }
                 catch (Exception)
@@ -384,7 +450,7 @@ public class ReminderSendBackgroundService : BackgroundService
                     {
                         ClientPhone = clientPhone,
                         Payload = whatsappPayload.Value,
-                    });
+                    }, orgId);
                     whatsappStatus = result.Status;
                     whatsappMessageId = result.MessageId;
                 }

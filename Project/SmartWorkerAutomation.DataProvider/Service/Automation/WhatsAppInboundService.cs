@@ -2,6 +2,7 @@ using System.Data;
 using System.Text.Json;
 using Dapper;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using SmartWorkerAutomation.Core.Repository.Automation;
 
 namespace SmartWorkerAutomation.DataProvider.Automation;
@@ -16,26 +17,64 @@ namespace SmartWorkerAutomation.DataProvider.Automation;
 /// (<c>entry[].changes[].value</c>) since there's no n8n node in front of
 /// it anymore - see WhatsAppWebhookController, the new public endpoint
 /// replacing that trigger.
+///
+/// Tenant routing: this is called from an unauthenticated webhook endpoint
+/// (Meta can't carry our JWT), so there's no orgid claim to resolve a
+/// connection through DbConnectionFactory the way authenticated requests
+/// do. Instead each Meta payload carries its own routing key -
+/// value.metadata.phone_number_id - which we look up against
+/// organisationinfo.webhookphonenumber (set at onboarding) to find the
+/// owning org, then open that tenant's connection directly via
+/// ITenantResolverService. Resolved independently per value, since a
+/// single webhook POST can in principle batch entries for more than one
+/// phone number under the same Meta app subscription.
 /// </summary>
 public class WhatsAppInboundService : IWhatsAppInboundService
 {
-    private readonly DbConnectionFactory _connectionFactory;
+    private readonly IMasterAuthRepository _masterAuthRepository;
+    private readonly ITenantResolverService _tenantResolver;
     private readonly IQueryStore _queryStore;
     private readonly ILogger<WhatsAppInboundService> _logger;
 
-    public WhatsAppInboundService(DbConnectionFactory connectionFactory, IQueryStore queryStore, ILogger<WhatsAppInboundService> logger)
+    public WhatsAppInboundService(
+        IMasterAuthRepository masterAuthRepository,
+        ITenantResolverService tenantResolver,
+        IQueryStore queryStore,
+        ILogger<WhatsAppInboundService> logger)
     {
-        _connectionFactory = connectionFactory;
+        _masterAuthRepository = masterAuthRepository;
+        _tenantResolver = tenantResolver;
         _queryStore = queryStore;
         _logger = logger;
     }
 
     public async Task ProcessWebhookPayloadAsync(JsonElement payload, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.CreateConnection();
-
         foreach (var value in CollectValues(payload))
         {
+            var phoneNumberId = GetMetadataPhoneNumberId(value);
+            if (string.IsNullOrEmpty(phoneNumberId))
+            {
+                _logger.LogWarning("WF: Reply Capture WhatsApp - webhook value has no metadata.phone_number_id; cannot route to a tenant, skipping this value.");
+                continue;
+            }
+
+            var orgId = await _masterAuthRepository.GetOrgIdByWebhookPhoneNumberAsync(phoneNumberId);
+            if (orgId is null)
+            {
+                _logger.LogWarning("WF: Reply Capture WhatsApp - no active organisation matches webhook phone_number_id={PhoneNumberId}; skipping this value.", phoneNumberId);
+                continue;
+            }
+
+            var connectionString = await _tenantResolver.GetTenantConnectionStringAsync(orgId.Value);
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                _logger.LogError("WF: Reply Capture WhatsApp - could not resolve a tenant connection string for orgid={OrgId} (phone_number_id={PhoneNumberId}); skipping this value.", orgId, phoneNumberId);
+                continue;
+            }
+
+            using var connection = new NpgsqlConnection(connectionString);
+
             if (value.TryGetProperty("statuses", out var statuses) && statuses.ValueKind == JsonValueKind.Array)
             {
                 foreach (var status in statuses.EnumerateArray())
@@ -54,6 +93,14 @@ public class WhatsAppInboundService : IWhatsAppInboundService
                 }
             }
         }
+    }
+
+    /// <summary>Meta's webhook envelope carries the sending/receiving number's id at value.metadata.phone_number_id - the routing key back to organisationinfo.webhookphonenumber.</summary>
+    private static string? GetMetadataPhoneNumberId(JsonElement value)
+    {
+        return value.TryGetProperty("metadata", out var metadata) && metadata.TryGetProperty("phone_number_id", out var phoneNumberIdProp)
+            ? phoneNumberIdProp.GetString()
+            : null;
     }
 
     /// <summary>Meta's raw webhook shape is always <c>entry[].changes[].value</c>.</summary>

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartWorkerAutomation.Common.Automation;
+using SmartWorkerAutomation.Core.Repository.Automation;
 using SmartWorkerAutomation.DataProvider.Automation;
 using System.Threading.Tasks;
 
@@ -16,8 +17,16 @@ namespace SmartWorkerAutomation.API.Controllers;
 /// of this endpoint (e.g. n8n) don't carry a user's JWT. If this needs to
 /// be locked down beyond network-level access, add a shared-secret header
 /// check here before wiring n8n's HTTP nodes to it.
+///
+/// SendWhatsApp/SendEmail resolve orgId via DbConnectionFactory.ResolveOrgId()
+/// (the same orgid-JWT-claim path DbConnectionFactory itself uses) so
+/// IWhatsAppService/IEmailService know which org's credentials to send
+/// with - which means, same as before this per-org credentials change,
+/// these two endpoints still only work for an authenticated caller with an
+/// orgid claim; an anonymous/n8n caller hits that resolution failure
+/// before ever reaching Meta/SMTP, unchanged from today.
 /// </summary>
-[Authorize(AuthenticationSchemes = "CustomTokenScheme")]
+[AllowAnonymous]
 [ApiController]
 [Route("api/[controller]")]
 public class NotificationsController : ControllerBase
@@ -25,15 +34,18 @@ public class NotificationsController : ControllerBase
     private readonly IWhatsAppService _whatsAppService;
     private readonly IEmailService _emailService;
     private readonly INotificationsService _notificationsService;
+    private readonly DbConnectionFactory _connectionFactory;
 
     public NotificationsController(
         IWhatsAppService whatsAppService,
         IEmailService emailService,
-        INotificationsService notificationsService)
+        INotificationsService notificationsService,
+        DbConnectionFactory connectionFactory)
     {
         _whatsAppService = whatsAppService;
         _emailService = emailService;
         _notificationsService = notificationsService;
+        _connectionFactory = connectionFactory;
     }
 
     /// <summary>
@@ -49,7 +61,7 @@ public class NotificationsController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var result = await _whatsAppService.SendAsync(request);
+        var result = await _whatsAppService.SendAsync(request, _connectionFactory.ResolveOrgId());
         return Ok(result);
     }
 
@@ -65,7 +77,7 @@ public class NotificationsController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var result = await _emailService.SendAsync(request);
+        var result = await _emailService.SendAsync(request, _connectionFactory.ResolveOrgId());
         return Ok(result);
     }
 

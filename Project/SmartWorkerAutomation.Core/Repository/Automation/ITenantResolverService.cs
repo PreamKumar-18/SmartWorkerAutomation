@@ -1,4 +1,5 @@
-﻿using SmartWorkerAutomation.Core;
+﻿using SmartWorkerAutomation.Common.Automation;
+using SmartWorkerAutomation.Core;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -20,4 +21,21 @@ public interface ITenantResolverService
     /// every single request.
     /// </summary>
     Task<string?> GetTenantConnectionStringAsync(int orgId);
+
+    /// <summary>
+    /// Resolves this org's WhatsApp send credentials - its own dedicated
+    /// Meta phone_number_id/access token if organisationinfo has them set,
+    /// otherwise the global Meta:WhatsAppPhoneNumberId/
+    /// Meta:WhatsAppAccessToken config (so orgs without dedicated
+    /// credentials keep working unchanged). Cached like
+    /// GetTenantConnectionStringAsync.
+    /// </summary>
+    Task<WhatsAppOrgCredentials> GetWhatsAppCredentialsAsync(int orgId);
+
+    /// <summary>
+    /// Resolves this org's SMTP send credentials - its own dedicated SMTP
+    /// account if organisationinfo has one set, otherwise the global
+    /// Smtp:* config. Cached like GetTenantConnectionStringAsync.
+    /// </summary>
+    Task<SmtpOrgCredentials> GetSmtpCredentialsAsync(int orgId);
 }

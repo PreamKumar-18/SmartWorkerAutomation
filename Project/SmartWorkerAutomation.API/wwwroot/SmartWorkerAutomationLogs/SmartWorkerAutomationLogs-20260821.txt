@@ -1,0 +1,991 @@
+2026-08-21 16:57:45.777 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 16:57:46.869 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 16:58:46.001 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 16:58:47.223 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 16:59:46.023 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 16:59:47.830 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:00:46.045 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:00:48.343 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:01:46.086 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:01:48.950 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:02:46.107 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:02:49.282 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:03:46.125 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:03:49.921 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:04:58.611 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:05:02.987 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:05:58.634 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:06:03.731 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:06:08.163 +03:00 [ERR] WF: Reconcile WhatsApp Status (Schedule) - cycle failed; will retry next cycle.
+Npgsql.NpgsqlException (0x80004005): Exception while writing to stream
+ ---> System.IO.IOException: Unable to write data to the transport connection: An existing connection was forcibly closed by the remote host..
+ ---> System.Net.Sockets.SocketException (10054): An existing connection was forcibly closed by the remote host.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.CreateException(SocketError error, Boolean forAsyncThrow)
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.<Write>g__WriteExecute|103_0(NpgsqlConnector connector, Boolean async, Boolean flush, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.ExecuteReaderWithFlagsFallbackAsync(DbCommand cmd, Boolean wasClosed, CommandBehavior behavior, CancellationToken cancellationToken) in /_/Dapper/SqlMapper.Async.cs:line 384
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 434
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.Async.cs:line 91
+   at SmartWorkerAutomation.Core.Repository.Automation.MasterAuthRepository.GetAllActiveTenantConnectionsAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.Core\Repository\Automation\MasterAuthRepository.cs:line 45
+   at SmartWorkerAutomation.Core.Repository.Automation.MasterAuthRepository.GetAllActiveTenantConnectionsAsync()
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 66
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync()
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 43
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Threading.Tasks.Task.TrySetResult()
+   at System.Threading.Tasks.Task.DelayPromise.CompleteTimedOut()
+   at System.Threading.TimerQueue.FireNextTimers()
+   at System.Threading.ThreadPoolWorkQueue.Dispatch()
+   at System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart()
+   at System.Threading.Thread.StartCallback()
+--- End of stack trace from previous location ---
+
+   --- End of inner exception stack trace ---
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.<Write>g__WriteExecute|103_0(NpgsqlConnector connector, Boolean async, Boolean flush, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 434
+   at SmartWorkerAutomation.Core.Repository.Automation.MasterAuthRepository.GetAllActiveTenantConnectionsAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.Core\Repository\Automation\MasterAuthRepository.cs:line 45
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 66
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 43
+2026-08-21 17:06:58.665 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:07:04.106 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:07:58.687 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:08:04.741 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:08:09.583 +03:00 [ERR] WF: Reconcile WhatsApp Status (Schedule) - reconcile call failed for orgid 8; will retry next cycle.
+Npgsql.NpgsqlException (0x80004005): Exception while writing to stream
+ ---> System.IO.IOException: Unable to write data to the transport connection: An existing connection was forcibly closed by the remote host..
+ ---> System.Net.Sockets.SocketException (10054): An existing connection was forcibly closed by the remote host.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.CreateException(SocketError error, Boolean forAsyncThrow)
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.<Write>g__WriteExecute|103_0(NpgsqlConnector connector, Boolean async, Boolean flush, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Npgsql.NpgsqlCommand.ExecuteNonQueryAsync(CancellationToken cancellationToken)
+   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param) in /_/Dapper/SqlMapper.Async.cs:line 663
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param)
+   at Dapper.SqlMapper.ExecuteAsync(IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 545
+   at Dapper.SqlMapper.ExecuteAsync(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.Async.cs:line 527
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 75
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.SetResult(TResult result)
+   at SmartWorkerAutomation.Core.Repository.Automation.MasterAuthRepository.GetAllActiveTenantConnectionsAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.Core\Repository\Automation\MasterAuthRepository.cs:line 47
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.SetResult(TResult result)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 475
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.ExecutionContextCallback(Object s)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext(Thread threadPoolThread)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Threading.Tasks.Task`1.TrySetResult(TResult result)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.SetExistingTaskResult(Task`1 task, TResult result)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at Npgsql.Internal.NpgsqlReadBuffer.<Ensure>g__EnsureLong|54_0(NpgsqlReadBuffer buffer, Int32 count, Boolean async, Boolean readingNotifications)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.ThreadPoolBoundHandleOverlapped.CompletionCallback(UInt32 errorCode, UInt32 numBytes, NativeOverlapped* nativeOverlapped)
+   at System.Threading.ThreadPoolTypedWorkItemQueue.System.Threading.IThreadPoolWorkItem.Execute()
+   at System.Threading.ThreadPoolWorkQueue.Dispatch()
+   at System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart()
+   at System.Threading.Thread.StartCallback()
+--- End of stack trace from previous location ---
+
+   --- End of inner exception stack trace ---
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.<Write>g__WriteExecute|103_0(NpgsqlConnector connector, Boolean async, Boolean flush, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param) in /_/Dapper/SqlMapper.Async.cs:line 663
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 75
+2026-08-21 17:10:06.959 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:16:19.943 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:17:12.862 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:17:20.673 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:17:25.449 +03:00 [ERR] WF: Reconcile WhatsApp Status (Schedule) - cycle failed; will retry next cycle.
+Npgsql.NpgsqlException (0x80004005): Exception while writing to stream
+ ---> System.IO.IOException: Unable to write data to the transport connection: An existing connection was forcibly closed by the remote host..
+ ---> System.Net.Sockets.SocketException (10054): An existing connection was forcibly closed by the remote host.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.CreateException(SocketError error, Boolean forAsyncThrow)
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.<Write>g__WriteExecute|103_0(NpgsqlConnector connector, Boolean async, Boolean flush, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.ExecuteReaderWithFlagsFallbackAsync(DbCommand cmd, Boolean wasClosed, CommandBehavior behavior, CancellationToken cancellationToken) in /_/Dapper/SqlMapper.Async.cs:line 384
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 434
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.Async.cs:line 91
+   at SmartWorkerAutomation.Core.Repository.Automation.MasterAuthRepository.GetAllActiveTenantConnectionsAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.Core\Repository\Automation\MasterAuthRepository.cs:line 45
+   at SmartWorkerAutomation.Core.Repository.Automation.MasterAuthRepository.GetAllActiveTenantConnectionsAsync()
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 66
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync()
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 43
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Threading.Tasks.Task.TrySetResult()
+   at System.Threading.Tasks.Task.DelayPromise.CompleteTimedOut()
+   at System.Threading.TimerQueue.FireNextTimers()
+   at System.Threading.ThreadPoolWorkQueue.Dispatch()
+   at System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart()
+   at System.Threading.Thread.StartCallback()
+--- End of stack trace from previous location ---
+
+   --- End of inner exception stack trace ---
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.<Write>g__WriteExecute|103_0(NpgsqlConnector connector, Boolean async, Boolean flush, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 434
+   at SmartWorkerAutomation.Core.Repository.Automation.MasterAuthRepository.GetAllActiveTenantConnectionsAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.Core\Repository\Automation\MasterAuthRepository.cs:line 45
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 66
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 43
+2026-08-21 17:18:12.894 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:18:21.008 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:19:12.918 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:19:21.753 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:19:26.914 +03:00 [ERR] WF: Reconcile WhatsApp Status (Schedule) - reconcile call failed for orgid 8; will retry next cycle.
+Npgsql.NpgsqlException (0x80004005): Exception while writing to stream
+ ---> System.IO.IOException: Unable to write data to the transport connection: An existing connection was forcibly closed by the remote host..
+ ---> System.Net.Sockets.SocketException (10054): An existing connection was forcibly closed by the remote host.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.CreateException(SocketError error, Boolean forAsyncThrow)
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.<Write>g__WriteExecute|103_0(NpgsqlConnector connector, Boolean async, Boolean flush, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Npgsql.NpgsqlCommand.ExecuteNonQueryAsync(CancellationToken cancellationToken)
+   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param) in /_/Dapper/SqlMapper.Async.cs:line 663
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param)
+   at Dapper.SqlMapper.ExecuteAsync(IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 545
+   at Dapper.SqlMapper.ExecuteAsync(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.Async.cs:line 527
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 75
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.SetResult(TResult result)
+   at SmartWorkerAutomation.Core.Repository.Automation.MasterAuthRepository.GetAllActiveTenantConnectionsAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.Core\Repository\Automation\MasterAuthRepository.cs:line 47
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.SetResult(TResult result)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 475
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.ExecutionContextCallback(Object s)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext(Thread threadPoolThread)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Threading.Tasks.Task`1.TrySetResult(TResult result)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.SetExistingTaskResult(Task`1 task, TResult result)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at Npgsql.Internal.NpgsqlReadBuffer.<Ensure>g__EnsureLong|54_0(NpgsqlReadBuffer buffer, Int32 count, Boolean async, Boolean readingNotifications)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.ThreadPoolBoundHandleOverlapped.CompletionCallback(UInt32 errorCode, UInt32 numBytes, NativeOverlapped* nativeOverlapped)
+   at System.Threading.ThreadPoolTypedWorkItemQueue.System.Threading.IThreadPoolWorkItem.Execute()
+   at System.Threading.ThreadPoolWorkQueue.Dispatch()
+   at System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart()
+   at System.Threading.Thread.StartCallback()
+--- End of stack trace from previous location ---
+
+   --- End of inner exception stack trace ---
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.<Write>g__WriteExecute|103_0(NpgsqlConnector connector, Boolean async, Boolean flush, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param) in /_/Dapper/SqlMapper.Async.cs:line 663
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 75
+2026-08-21 17:20:12.938 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:20:22.209 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:21:12.959 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:21:22.882 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:22:12.982 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:22:23.250 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:23:13.001 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:23:24.056 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:24:13.031 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:24:24.397 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:25:13.052 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:25:25.273 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:26:13.093 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:26:25.675 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:27:13.123 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:27:26.675 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:34:54.120 +03:00 [ERR] WF: Reconcile WhatsApp Status (Schedule) - reconcile call failed for orgid 9; will retry next cycle.
+Npgsql.NpgsqlException (0x80004005): Exception while writing to stream
+ ---> System.IO.IOException: Unable to write data to the transport connection: An existing connection was forcibly closed by the remote host..
+ ---> System.Net.Sockets.SocketException (10054): An existing connection was forcibly closed by the remote host.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.CreateException(SocketError error, Boolean forAsyncThrow)
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.<Write>g__WriteExecute|103_0(NpgsqlConnector connector, Boolean async, Boolean flush, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param)
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param)
+   at Dapper.SqlMapper.ExecuteAsync(IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 545
+   at Dapper.SqlMapper.ExecuteAsync(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.Async.cs:line 527
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 75
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param) in /_/Dapper/SqlMapper.Async.cs:line 671
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.ExecutionContextCallback(Object s)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext(Thread threadPoolThread)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.ExecutionContextCallback(Object s)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext(Thread threadPoolThread)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Threading.Tasks.Task`1.TrySetResult(TResult result)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.SetExistingTaskResult(Task`1 task, TResult result)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at Npgsql.Internal.NpgsqlReadBuffer.<Ensure>g__EnsureLong|54_0(NpgsqlReadBuffer buffer, Int32 count, Boolean async, Boolean readingNotifications)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.ThreadPoolBoundHandleOverlapped.CompletionCallback(UInt32 errorCode, UInt32 numBytes, NativeOverlapped* nativeOverlapped)
+   at System.Threading.ThreadPoolTypedWorkItemQueue.System.Threading.IThreadPoolWorkItem.Execute()
+   at System.Threading.ThreadPoolWorkQueue.Dispatch()
+   at System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart()
+   at System.Threading.Thread.StartCallback()
+--- End of stack trace from previous location ---
+
+   --- End of inner exception stack trace ---
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.<Write>g__WriteExecute|103_0(NpgsqlConnector connector, Boolean async, Boolean flush, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param) in /_/Dapper/SqlMapper.Async.cs:line 663
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 75
+2026-08-21 17:35:30.748 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:35:44.899 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:36:30.772 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:36:45.660 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:36:56.940 +03:00 [ERR] WF: Reconcile WhatsApp Status (Schedule) - cycle failed; will retry next cycle.
+Npgsql.NpgsqlException (0x80004005): Exception while writing to stream
+ ---> System.IO.IOException: Unable to write data to the transport connection: An existing connection was forcibly closed by the remote host..
+ ---> System.Net.Sockets.SocketException (10054): An existing connection was forcibly closed by the remote host.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.CreateException(SocketError error, Boolean forAsyncThrow)
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.<Write>g__WriteExecute|103_0(NpgsqlConnector connector, Boolean async, Boolean flush, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.ExecuteReaderWithFlagsFallbackAsync(DbCommand cmd, Boolean wasClosed, CommandBehavior behavior, CancellationToken cancellationToken) in /_/Dapper/SqlMapper.Async.cs:line 384
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 434
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.Async.cs:line 91
+   at SmartWorkerAutomation.Core.Repository.Automation.MasterAuthRepository.GetAllActiveTenantConnectionsAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.Core\Repository\Automation\MasterAuthRepository.cs:line 45
+   at SmartWorkerAutomation.Core.Repository.Automation.MasterAuthRepository.GetAllActiveTenantConnectionsAsync()
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 66
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync()
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 43
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Threading.Tasks.Task.DelayPromise.CompleteTimedOut()
+   at System.Threading.TimerQueue.FireNextTimers()
+   at System.Threading.ThreadPoolWorkQueue.Dispatch()
+   at System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart()
+   at System.Threading.Thread.StartCallback()
+--- End of stack trace from previous location ---
+
+   --- End of inner exception stack trace ---
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.<Write>g__WriteExecute|103_0(NpgsqlConnector connector, Boolean async, Boolean flush, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 434
+   at SmartWorkerAutomation.Core.Repository.Automation.MasterAuthRepository.GetAllActiveTenantConnectionsAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.Core\Repository\Automation\MasterAuthRepository.cs:line 45
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 66
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 43
+2026-08-21 17:37:30.791 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:37:45.986 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:38:30.814 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:38:46.876 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:39:30.891 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:39:47.227 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:40:30.914 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:40:47.951 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:41:30.943 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:41:48.296 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:42:30.965 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:42:49.131 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:43:30.988 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:43:49.615 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:44:31.018 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:44:50.284 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:45:31.041 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:45:50.533 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:46:31.063 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:46:51.682 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:47:31.092 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:47:52.015 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:48:31.123 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:48:52.615 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:49:31.162 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:49:52.919 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:50:31.198 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:50:53.709 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:51:31.233 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:51:53.982 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:52:31.263 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:52:54.546 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:54:33.995 +03:00 [ERR] WF: Reconcile WhatsApp Status (Schedule) - cycle failed; will retry next cycle.
+Npgsql.NpgsqlException (0x80004005): Exception while writing to stream
+ ---> System.IO.IOException: Unable to write data to the transport connection: An existing connection was forcibly closed by the remote host..
+ ---> System.Net.Sockets.SocketException (10054): An existing connection was forcibly closed by the remote host.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.CreateException(SocketError error, Boolean forAsyncThrow)
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.<Write>g__WriteExecute|103_0(NpgsqlConnector connector, Boolean async, Boolean flush, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.ExecuteReaderWithFlagsFallbackAsync(DbCommand cmd, Boolean wasClosed, CommandBehavior behavior, CancellationToken cancellationToken) in /_/Dapper/SqlMapper.Async.cs:line 384
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 434
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.Async.cs:line 91
+   at SmartWorkerAutomation.Core.Repository.Automation.MasterAuthRepository.GetAllActiveTenantConnectionsAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.Core\Repository\Automation\MasterAuthRepository.cs:line 45
+   at SmartWorkerAutomation.Core.Repository.Automation.MasterAuthRepository.GetAllActiveTenantConnectionsAsync()
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 66
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync()
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 43
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AsyncStateMachineBox`1.MoveNext()
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(Action action, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Threading.Tasks.Task.DelayPromise.CompleteTimedOut()
+   at System.Threading.TimerQueue.FireNextTimers()
+   at System.Threading.ThreadPoolWorkQueue.Dispatch()
+   at System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart()
+   at System.Threading.Thread.StartCallback()
+--- End of stack trace from previous location ---
+
+   --- End of inner exception stack trace ---
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlWriteBuffer.Flush(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.<Write>g__WriteExecute|103_0(NpgsqlConnector connector, Boolean async, Boolean flush, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 434
+   at SmartWorkerAutomation.Core.Repository.Automation.MasterAuthRepository.GetAllActiveTenantConnectionsAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.Core\Repository\Automation\MasterAuthRepository.cs:line 45
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 66
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 43
+2026-08-21 17:54:53.214 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:55:17.136 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:55:53.243 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:56:17.807 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 17:56:53.265 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 17:57:18.228 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: Response status code does not indicate success: 400 (Bad Request).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 46
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 19:05:50.099 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 19:06:15.237 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: No such host is known. (oauth2.googleapis.com:443)
+ ---> System.Net.Sockets.SocketException (11001): No such host is known.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionWithTelemetryAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.SocketsHttpHandler.<SendAsync>g__CreateHandlerAndSendAsync|115_0(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 44
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 19:06:35.257 +03:00 [ERR] WF: Reconcile WhatsApp Status (Schedule) - cycle failed; will retry next cycle.
+Npgsql.NpgsqlException (0x80004005): Failed to connect to 62.72.12.95:5432
+ ---> System.Net.Sockets.SocketException (10065): A socket operation was attempted to an unreachable host.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 433
+   at SmartWorkerAutomation.Core.Repository.Automation.MasterAuthRepository.GetAllActiveTenantConnectionsAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.Core\Repository\Automation\MasterAuthRepository.cs:line 45
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.RunReconcileCycleAsync() in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 66
+   at SmartWorkerAutomation.API.BackgroundServices.ReconcileWhatsAppStatusBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReconcileWhatsAppStatusBackgroundService.cs:line 43
+2026-08-21 19:06:50.128 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
+2026-08-21 19:07:15.391 +03:00 [ERR] WF: Inbound Email (Reply Capture) - poll cycle failed; will retry next cycle.
+System.Net.Http.HttpRequestException: No such host is known. (oauth2.googleapis.com:443)
+ ---> System.Net.Sockets.SocketException (11001): No such host is known.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionWithTelemetryAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at SmartWorkerAutomation.DataProvider.Automation.GmailClient.GetAccessTokenAsync(CancellationToken cancellationToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.DataProvider\Service\Automation\GmailClient.cs:line 44
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.RunPollCycleAsync(DateTimeOffset since, CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 137
+   at SmartWorkerAutomation.API.BackgroundServices.InboundEmailBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\InboundEmailBackgroundService.cs:line 98
+2026-08-21 19:07:50.148 +03:00 [ERR] WF: Reminder Send (Automation) - poll cycle failed; will retry next cycle.
+System.ArgumentNullException: Value cannot be null. (Parameter 'destinationTimeZone')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.TimeZoneInfo.ConvertTime(DateTimeOffset dateTimeOffset, TimeZoneInfo destinationTimeZone)
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.IsWithinSendWindow(DateTimeOffset nowUtc) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 259
+   at SmartWorkerAutomation.API.BackgroundServices.ReminderSendBackgroundService.ExecuteAsync(CancellationToken stoppingToken) in C:\Application\angular\Api\Project\SmartWorkerAutomation.API\BackgroundServices\ReminderSendBackgroundService.cs:line 100
