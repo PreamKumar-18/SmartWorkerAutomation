@@ -22,11 +22,22 @@ namespace SmartWorkerAutomation.DataProvider.Automation;
 /// every send should go out through the same mailbox.
 ///
 /// Retries transient failures (4xx-class SMTP status codes like "mailbox
-/// busy"/"service not available", plus network-level errors) up to
-/// MaxAttempts times with exponential backoff. Permanent failures (5xx-class
-/// SMTP rejections like "mailbox unavailable"/bad recipient, auth failures)
-/// fail immediately - retrying those wastes time on something a retry can't
-/// fix.
+/// busy"/"service not available") up to MaxAttempts times with exponential
+/// backoff - these are explicit protocol replies from the server, so a
+/// retry can't create a duplicate. Permanent failures (5xx-class SMTP
+/// rejections like "mailbox unavailable"/bad recipient, auth failures) fail
+/// immediately - retrying those wastes time on something a retry can't fix.
+///
+/// Anything else - a connection-level error, SmtpException.GeneralFailure,
+/// or SendMailAsync timing out - is NOT retried. Unlike a 4xx reply, these
+/// don't tell us whether the SMTP server already accepted the message
+/// before the failure happened (e.g. a network drop right after the DATA
+/// command, before the final "250 OK" came back). Retrying an ambiguous
+/// case risks a duplicate email; these are returned as status "unknown"
+/// instead, on every attempt including the last one. There's currently no
+/// delivery-status webhook for email the way there is for WhatsApp, so an
+/// "unknown" email has no automatic reconciliation path yet - it's still
+/// the safer failure mode than a guaranteed possible duplicate.
 /// </summary>
 public class EmailService : IEmailService
 {
@@ -80,18 +91,20 @@ public class EmailService : IEmailService
             }
             catch (SmtpException ex) when (attempt < MaxAttempts && IsTransientSmtpStatus(ex.StatusCode))
             {
+                // An explicit 4xx-class reply from the server - it received
+                // and rejected this attempt, so retrying can't duplicate it.
                 _logger.LogWarning(ex, "WF: Reminder Send (Automation) - email send attempt {Attempt}/{MaxAttempts} for orgid {OrgId} got a transient SMTP status ({StatusCode}); retrying in {Delay}.", attempt, MaxAttempts, orgId, ex.StatusCode, delay);
                 await Task.Delay(delay);
                 delay *= 2;
             }
-            catch (Exception ex) when (attempt < MaxAttempts && ex is not SmtpException)
+            catch (Exception ex) when (IsAmbiguousException(ex))
             {
-                // Network-level failure (socket/timeout/DNS), not an SMTP
-                // protocol-level rejection - worth retrying the same as a
-                // transient SMTP status.
-                _logger.LogWarning(ex, "WF: Reminder Send (Automation) - email send attempt {Attempt}/{MaxAttempts} for orgid {OrgId} threw a transient error; retrying in {Delay}.", attempt, MaxAttempts, orgId, delay);
-                await Task.Delay(delay);
-                delay *= 2;
+                // Connection-level failure, SmtpException.GeneralFailure, or
+                // a timeout - none of these confirm whether the server had
+                // already accepted the message before the failure. Never
+                // retried inline; see class doc comment.
+                _logger.LogWarning(ex, "WF: Reminder Send (Automation) - email send attempt {Attempt}/{MaxAttempts} for orgid {OrgId} hit an ambiguous failure; treating as unknown rather than retrying, to avoid a duplicate send.", attempt, MaxAttempts, orgId);
+                return new EmailSendResponse("unknown", ex.Message);
             }
             catch (Exception ex)
             {
@@ -105,9 +118,8 @@ public class EmailService : IEmailService
     /// <summary>
     /// SMTP 4xx-class replies are transient (server asked the client to try
     /// again later); 5xx-class are permanent rejections (bad recipient,
-    /// policy rejection) that a retry can't fix. GeneralFailure (-1) means
-    /// System.Net.Mail couldn't even complete the SMTP conversation (a
-    /// connection-level issue), which is also worth retrying.
+    /// policy rejection) that a retry can't fix. GeneralFailure (-1) is
+    /// deliberately NOT included here - see IsAmbiguousException.
     /// </summary>
     private static bool IsTransientSmtpStatus(SmtpStatusCode statusCode) => statusCode switch
     {
@@ -115,7 +127,18 @@ public class EmailService : IEmailService
         SmtpStatusCode.MailboxBusy => true,
         SmtpStatusCode.LocalErrorInProcessing => true,
         SmtpStatusCode.InsufficientStorage => true,
-        SmtpStatusCode.GeneralFailure => true,
         _ => false,
     };
+
+    /// <summary>
+    /// GeneralFailure means System.Net.Mail couldn't cleanly complete the
+    /// SMTP conversation - could be a pre-send connection failure (safe to
+    /// retry) or a drop right after the message was accepted (not safe to
+    /// retry), and there's no way to tell which from here. Any other
+    /// non-SmtpException (socket error, timeout, DNS failure) has the same
+    /// ambiguity one level up. Both are treated as "unknown" rather than
+    /// retried - see class doc comment.
+    /// </summary>
+    private static bool IsAmbiguousException(Exception ex) =>
+        ex is not SmtpException smtpEx || smtpEx.StatusCode == SmtpStatusCode.GeneralFailure;
 }

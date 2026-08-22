@@ -22,13 +22,24 @@ namespace SmartWorkerAutomation.DataProvider.Automation;
 /// call it's handling. The full absolute URL is built per call instead of
 /// via HttpClient.BaseAddress for the same reason.
 ///
-/// Retries transient failures (timeouts, 429 rate-limit, 5xx from Meta) up
-/// to MaxAttempts times with exponential backoff (honoring Meta's
-/// Retry-After header on 429s when present) before giving up - a blip that
-/// would have resolved itself on a second try no longer permanently drops
-/// the message. Non-transient failures (400 bad payload/template, 401 bad
-/// token, etc.) fail immediately - retrying those would just waste time,
-/// they need a human/config fix, not a retry.
+/// Retries transient failures (429 rate-limit, 5xx from Meta, connection-
+/// level errors like DNS/refused) up to MaxAttempts times with exponential
+/// backoff (honoring Meta's Retry-After header on 429s when present) before
+/// giving up - a blip that would have resolved itself on a second try no
+/// longer permanently drops the message. Non-transient failures (400 bad
+/// payload/template, 401 bad token, etc.) fail immediately - retrying those
+/// would just waste time, they need a human/config fix, not a retry.
+///
+/// Timeouts are deliberately NOT retried here, unlike the other transient
+/// cases. A 429/5xx or a connection-level failure is a definitive signal -
+/// Meta either explicitly rejected the request, or the request never left
+/// this process. A timeout means neither is known: the request may have
+/// reached Meta and been processed, and we simply gave up waiting for the
+/// response. Retrying that risks sending a second real WhatsApp message for
+/// the same reminder. Timeouts return status "unknown" instead, immediately,
+/// on every attempt - left for the delivery-status webhook
+/// (WhatsAppInboundService/ProcessStatusAsync) to reconcile against Meta's
+/// own record of what actually happened, rather than guessed at here.
 /// </summary>
 public class WhatsAppService : IWhatsAppService
 {
@@ -100,8 +111,21 @@ public class WhatsAppService : IWhatsAppService
             {
                 response = await _httpClient.SendAsync(httpRequest);
             }
-            catch (Exception ex) when (attempt < MaxAttempts && IsTransientException(ex))
+            catch (Exception ex) when (IsAmbiguousException(ex))
             {
+                // Timed out waiting for Meta's response - we don't know
+                // whether the message was actually sent. Never retried
+                // inline (see class doc comment); parked as "unknown" for
+                // the delivery-status webhook to resolve instead, on every
+                // attempt including the last one.
+                _logger.LogWarning(ex, "WF: Reminder Send (Automation) - WhatsApp send attempt {Attempt}/{MaxAttempts} for orgid {OrgId} timed out; treating as unknown rather than retrying, to avoid a duplicate send.", attempt, MaxAttempts, orgId);
+                return new WhatsAppSendResponse("unknown", null, ex.Message);
+            }
+            catch (Exception ex) when (attempt < MaxAttempts && IsRetryableConnectionException(ex))
+            {
+                // Connection-level failure (DNS, refused, TLS handshake) -
+                // the request was never transmitted, so a retry can't
+                // create a duplicate.
                 _logger.LogWarning(ex, "WF: Reminder Send (Automation) - WhatsApp send attempt {Attempt}/{MaxAttempts} for orgid {OrgId} threw a transient error; retrying in {Delay}.", attempt, MaxAttempts, orgId, delay);
                 await Task.Delay(delay);
                 delay *= 2;
@@ -147,6 +171,16 @@ public class WhatsAppService : IWhatsAppService
         return new WhatsAppSendResponse("failed", null, $"Exceeded {MaxAttempts} send attempts (transient errors each time).");
     }
 
-    private static bool IsTransientException(Exception ex) =>
-        ex is HttpRequestException or TaskCanceledException or TimeoutException;
+    /// <summary>
+    /// No CancellationToken is passed into _httpClient.SendAsync, so the
+    /// only source of TaskCanceledException here is HttpClient's own
+    /// Timeout firing - not caller-initiated cancellation. Both this and a
+    /// direct TimeoutException mean "we stopped waiting," not "it failed" -
+    /// see the class doc comment for why these are never retried inline.
+    /// </summary>
+    private static bool IsAmbiguousException(Exception ex) =>
+        ex is TaskCanceledException or TimeoutException;
+
+    private static bool IsRetryableConnectionException(Exception ex) =>
+        ex is HttpRequestException;
 }
