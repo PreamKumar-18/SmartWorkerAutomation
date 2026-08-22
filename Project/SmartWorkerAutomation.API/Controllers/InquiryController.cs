@@ -1,12 +1,13 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SmartWorkerAutomation.Common.Automation;
+using SmartWorkerAutomation.DataProvider.Automation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using SmartWorkerAutomation.DataProvider.Automation;
 
 namespace SmartWorkerAutomation.API.Controllers;
 
@@ -341,5 +342,34 @@ public class InquiryController : ControllerBase
         return categoriesClaim
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .ToList();
+    }
+
+    [HttpPost("{id}/channel")]
+    public async Task<IActionResult> UpdateChannelEnabled(int id, [FromBody] UpdateChannelRequest request)
+    {
+        var roleName = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+        bool isAuthorized = string.Equals(roleName, "Admin", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(roleName, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+        if (!isAuthorized) return StatusCode(403, new { message = "Not authorized." });
+
+        if (request.Channel != "whatsapp" && request.Channel != "email")
+            return BadRequest(new { message = "Channel must be 'whatsapp' or 'email'." });
+
+        var success = await _inquiryService.UpdateChannelEnabledAsync(id, request.Channel, request.Enabled);
+        if (!success) return NotFound(new { message = "Rule not found." });
+        return Ok();
+    }
+
+    [HttpPost("{id}/skip-days")]
+    public async Task<IActionResult> UpdateSkipDays(int id, [FromBody] UpdateSkipDaysRequest request)
+    {
+        var roleName = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+        bool isAuthorized = string.Equals(roleName, "Admin", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(roleName, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+        if (!isAuthorized) return StatusCode(403, new { message = "Not authorized." });
+
+        var success = await _inquiryService.UpdateSkipDaysAsync(id, request.SkipDays);
+        if (!success) return NotFound(new { message = "Rule not found." });
+        return Ok();
     }
 }

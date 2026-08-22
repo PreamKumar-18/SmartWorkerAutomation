@@ -129,4 +129,6 @@ public interface IInquiryService
     /// or not this user's record).
     /// </summary>
     Task<CallInitiationResult?> InitiateCallAsync(string category, int id, string userIdClaim, bool isSuperAdmin);
+    Task<bool> UpdateChannelEnabledAsync(int ruleId, string channel, bool enabled);
+    Task<bool> UpdateSkipDaysAsync(int ruleId, int skipDays);
 }

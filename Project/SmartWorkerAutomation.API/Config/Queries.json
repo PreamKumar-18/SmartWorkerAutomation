@@ -211,6 +211,10 @@
       "GetUserRoleNameById": "SELECT r.\"UserType\" FROM \"User\" u JOIN \"UserType\" r ON r.\"UserTypeId\" = u.\"UserTypeId\" WHERE u.\"UserId\" = @UserId",
       "GetBranchIdsForUser": "SELECT branch_id FROM user_branch WHERE \"UserId\" = @UserId"
 
+    },
+    "RuleConfiguration": {
+      "UpdateChannelEnabled": "UPDATE rule_alert_configuration SET {ColumnName} = @Enabled, updated_at = now() WHERE id = @Id",
+      "UpdateSkipDays": "UPDATE rule_alert_configuration SET skip_days = @SkipDays, updated_at = now() WHERE id = @Id"
     }
   }
 }

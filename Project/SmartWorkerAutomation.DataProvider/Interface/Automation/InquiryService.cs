@@ -623,4 +623,27 @@ public class InquiryService : IInquiryService
                 return element.ValueKind == JsonValueKind.String ? element.GetString() : element.ToString();
         }
     }
+
+    public async Task<bool> UpdateChannelEnabledAsync(int ruleId, string channel, bool enabled)
+    {
+        var columnName = channel switch
+        {
+            "whatsapp" => "whatsapp_enabled",
+            "email" => "email_enabled",
+            _ => throw new ArgumentException($"Unknown channel '{channel}'.")
+        };
+
+        using var connection = _connectionFactory.CreateConnection();
+        var sql = _queryStore.Render("RuleConfiguration:UpdateChannelEnabled", new Dictionary<string, string> { ["ColumnName"] = columnName });
+        var rowsAffected = await connection.ExecuteAsync(sql, new { Id = ruleId, Enabled = enabled });
+        return rowsAffected > 0;
+    }
+
+    public async Task<bool> UpdateSkipDaysAsync(int ruleId, int skipDays)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var sql = _queryStore.Get("RuleConfiguration:UpdateSkipDays");
+        var rowsAffected = await connection.ExecuteAsync(sql, new { Id = ruleId, SkipDays = skipDays });
+        return rowsAffected > 0;
+    }
 }
