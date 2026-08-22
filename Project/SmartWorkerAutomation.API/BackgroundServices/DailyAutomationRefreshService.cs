@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Npgsql;
 using SmartWorkerAutomation.Core.Repository.Automation;
 using SmartWorkerAutomation.Core.Security;
+using System.Diagnostics;
 
 namespace SmartWorkerAutomation.API.BackgroundServices;
 
@@ -30,6 +31,14 @@ namespace SmartWorkerAutomation.API.BackgroundServices;
 public class DailyAutomationRefreshService : BackgroundService
 {
     private static readonly TimeSpan DefaultRunTimeOfDayIst = new(5, 0, 0);
+    private const int DefaultMaxConcurrentTenants = 5;
+    // refresh_automation_records_daily() runs 3 CROSS/LEFT JOIN LATERAL
+    // rule-matching passes (Purchase/Finance/Inventory) across a tenant's
+    // full automation_records table - generous relative to the 1-minute
+    // reminder-send cadence on purpose, since this only runs once a day and
+    // a slow tenant timing out and being skipped is worse than it taking a
+    // while.
+    private const int DefaultCommandTimeoutSeconds = 300;
 
     private readonly IQueryStore _queryStore;
     private readonly ILogger<DailyAutomationRefreshService> _logger;
@@ -37,6 +46,8 @@ public class DailyAutomationRefreshService : BackgroundService
     private readonly TimeSpan _runTimeOfDayIst;
     private readonly ConnectionStringEncryptor _encryptor;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly int _maxConcurrentTenants;
+    private readonly int _commandTimeoutSeconds;
 
     public DailyAutomationRefreshService(
         IQueryStore queryStore,
@@ -50,6 +61,8 @@ public class DailyAutomationRefreshService : BackgroundService
         _runTimeOfDayIst = ResolveRunTimeOfDay(configuration, logger);
         _encryptor = encryptor;
         _scopeFactory = scopeFactory;
+        _maxConcurrentTenants = ResolveInt(configuration, "Automation:DailyRefresh:MaxConcurrentTenants", DefaultMaxConcurrentTenants, logger);
+        _commandTimeoutSeconds = ResolveInt(configuration, "Automation:DailyRefresh:CommandTimeoutSeconds", DefaultCommandTimeoutSeconds, logger);
     }
 
     /// <summary>
@@ -105,34 +118,71 @@ public class DailyAutomationRefreshService : BackgroundService
                 break;
             }
 
-            await RunRefreshAsync();
+            await RunRefreshAsync(stoppingToken);
         }
     }
 
-    private async Task RunRefreshAsync()
+    private async Task RunRefreshAsync(CancellationToken stoppingToken)
     {
         using var scope = _scopeFactory.CreateScope();
         var masterAuthRepository = scope.ServiceProvider.GetRequiredService<IMasterAuthRepository>();
 
-        var tenants = await masterAuthRepository.GetAllActiveTenantConnectionsAsync();
+        var tenants = (await masterAuthRepository.GetAllActiveTenantConnectionsAsync()).ToList();
 
-        foreach (var tenant in tenants)
+        var runStopwatch = Stopwatch.StartNew();
+        var succeeded = 0;
+        var failed = 0;
+
+        // Bounded concurrency across tenants, same pattern as
+        // ReminderSendBackgroundService's decide phase - one slow/stuck
+        // tenant (large batch, network hiccup) no longer delays every other
+        // tenant behind it sequentially. CommandTimeoutSeconds bounds how
+        // long any single tenant's CALL can run before Npgsql cancels it,
+        // so one truly stuck tenant can't hang the whole nightly run
+        // indefinitely either.
+        using var tenantThrottle = new SemaphoreSlim(_maxConcurrentTenants);
+
+        var tenantTasks = tenants.Select(async tenant =>
         {
+            if (stoppingToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            await tenantThrottle.WaitAsync(stoppingToken);
+            var tenantStopwatch = Stopwatch.StartNew();
             try
             {
                 var decrypted = _encryptor.Decrypt(tenant.EncryptedConnectionString);
                 using var connection = new NpgsqlConnection(decrypted);
                 var sql = _queryStore.Get("Automation:DailyRefresh");
-                await connection.ExecuteAsync(sql);
-                _logger.LogInformation("WF: Daily Refresh Automation Records (12.15 AM) completed for orgid {OrgId}.", tenant.OrgId);
+                var command = new CommandDefinition(sql, commandTimeout: _commandTimeoutSeconds, cancellationToken: stoppingToken);
+                await connection.ExecuteAsync(command);
+                Interlocked.Increment(ref succeeded);
+                _logger.LogInformation(
+                    "WF: Daily Refresh Automation Records (12.15 AM) completed for orgid {OrgId} in {Elapsed}.",
+                    tenant.OrgId, tenantStopwatch.Elapsed);
             }
             catch (Exception ex)
             {
                 // One tenant's failure (bad connection string, DB down,
-                // etc.) must not stop the refresh for every other tenant.
-                _logger.LogError(ex, "WF: Daily Refresh Automation Records (12.15 AM) failed for orgid {OrgId}.", tenant.OrgId);
+                // command timeout, etc.) must not stop the refresh for
+                // every other tenant.
+                Interlocked.Increment(ref failed);
+                _logger.LogError(ex, "WF: Daily Refresh Automation Records (12.15 AM) failed for orgid {OrgId} after {Elapsed}.", tenant.OrgId, tenantStopwatch.Elapsed);
             }
-        }
+            finally
+            {
+                tenantThrottle.Release();
+            }
+        });
+
+        await Task.WhenAll(tenantTasks);
+
+        runStopwatch.Stop();
+        _logger.LogInformation(
+            "WF: Daily Refresh Automation Records (12.15 AM) - full run across {TenantCount} tenant(s) took {TotalElapsed} ({Succeeded} succeeded, {Failed} failed).",
+            tenants.Count, runStopwatch.Elapsed, succeeded, failed);
     }
 
     /// <summary>
@@ -147,6 +197,23 @@ public class DailyAutomationRefreshService : BackgroundService
         var todayRunIst = new DateTimeOffset(nowIst.Date, nowIst.Offset).Add(_runTimeOfDayIst);
         var nextRunIst = nowIst < todayRunIst ? todayRunIst : todayRunIst.AddDays(1);
         return nextRunIst - nowIst;
+    }
+
+    private static int ResolveInt(IConfiguration configuration, string key, int fallback, ILogger logger)
+    {
+        var configured = configuration[key];
+        if (string.IsNullOrWhiteSpace(configured))
+        {
+            return fallback;
+        }
+
+        if (int.TryParse(configured, out var parsed) && parsed > 0)
+        {
+            return parsed;
+        }
+
+        logger.LogWarning("{Key} value '{Configured}' is not a valid positive integer - falling back to {Fallback}.", key, configured, fallback);
+        return fallback;
     }
 
     private static TimeZoneInfo ResolveIndiaTimeZone(ILogger logger)

@@ -39,6 +39,7 @@ public static class ConfigureRepositoryServiceExtension
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IMasterAuthRepository, MasterAuthRepository>();
         services.AddScoped<IWebhookInboxRepository, WebhookInboxRepository>();
+        services.AddScoped<IReminderSendOutboxRepository, ReminderSendOutboxRepository>();
         services.AddScoped<ITenantResolverService, TenantResolverService>();
         services.AddSingleton<ITokenEncryptionService, TokenEncryptionService>();
         services.AddScoped<IBranchService, BranchService>();

@@ -34,17 +34,20 @@ public class WhatsAppInboundService : IWhatsAppInboundService
     private readonly IMasterAuthRepository _masterAuthRepository;
     private readonly ITenantResolverService _tenantResolver;
     private readonly IQueryStore _queryStore;
+    private readonly IReminderSendOutboxRepository _outboxRepository;
     private readonly ILogger<WhatsAppInboundService> _logger;
 
     public WhatsAppInboundService(
         IMasterAuthRepository masterAuthRepository,
         ITenantResolverService tenantResolver,
         IQueryStore queryStore,
+        IReminderSendOutboxRepository outboxRepository,
         ILogger<WhatsAppInboundService> logger)
     {
         _masterAuthRepository = masterAuthRepository;
         _tenantResolver = tenantResolver;
         _queryStore = queryStore;
+        _outboxRepository = outboxRepository;
         _logger = logger;
     }
 
@@ -79,7 +82,7 @@ public class WhatsAppInboundService : IWhatsAppInboundService
             {
                 foreach (var status in statuses.EnumerateArray())
                 {
-                    await ProcessStatusAsync(connection, status);
+                    await ProcessStatusAsync(connection, status, orgId.Value);
                 }
 
                 continue;
@@ -128,7 +131,7 @@ public class WhatsAppInboundService : IWhatsAppInboundService
         }
     }
 
-    private async Task ProcessStatusAsync(IDbConnection connection, JsonElement status)
+    private async Task ProcessStatusAsync(IDbConnection connection, JsonElement status, int orgId)
     {
         var wamid = GetStringProp(status, "id");
         var statusName = GetStringProp(status, "status");
@@ -142,17 +145,21 @@ public class WhatsAppInboundService : IWhatsAppInboundService
         double? eventTs = double.TryParse(timestampText, out var ts) ? ts : null;
 
         int? errorCode = null;
+        string? errorDetail = null;
         if (status.TryGetProperty("errors", out var errors)
             && errors.ValueKind == JsonValueKind.Array
-            && errors.GetArrayLength() > 0
-            && errors[0].TryGetProperty("code", out var codeProp))
+            && errors.GetArrayLength() > 0)
         {
-            errorCode = codeProp.ValueKind switch
+            errorDetail = errors[0].TryGetProperty("title", out var titleProp) ? titleProp.GetString() : null;
+            if (errors[0].TryGetProperty("code", out var codeProp))
             {
-                JsonValueKind.Number when codeProp.TryGetInt32(out var n) => n,
-                JsonValueKind.String when int.TryParse(codeProp.GetString(), out var n) => n,
-                _ => null,
-            };
+                errorCode = codeProp.ValueKind switch
+                {
+                    JsonValueKind.Number when codeProp.TryGetInt32(out var n) => n,
+                    JsonValueKind.String when int.TryParse(codeProp.GetString(), out var n) => n,
+                    _ => null,
+                };
+            }
         }
 
         try
@@ -170,6 +177,34 @@ public class WhatsAppInboundService : IWhatsAppInboundService
         catch (Exception ex)
         {
             _logger.LogError(ex, "WF: Reply Capture WhatsApp - failed to store/reconcile status event for wamid={Wamid}.", wamid);
+        }
+
+        // Best-effort: also resolve a reminder_send_outbox ticket left
+        // 'unknown' after a send timed out (see WhatsAppService's doc
+        // comment - there's no wamid captured on our side to match exactly
+        // for that case, so this falls back to oldest-unknown-ticket-for-
+        // this-recipient - see ReminderSendOutboxRepository.
+        // ResolveUnknownWhatsAppAsync). Deliberately independent of the
+        // tenant-side reconcile above and wrapped in its own try/catch - a
+        // failure here must not stop the tenant-side automation_records
+        // reconciliation that already succeeded (or vice versa).
+        if (!string.IsNullOrEmpty(recipient))
+        {
+            var resolvedStatus = statusName == "failed" ? "failed" : "sent";
+            try
+            {
+                var resolvedOutboxId = await _outboxRepository.ResolveUnknownWhatsAppAsync(orgId, recipient, resolvedStatus, wamid, errorDetail);
+                if (resolvedOutboxId.HasValue)
+                {
+                    _logger.LogInformation(
+                        "WF: Reply Capture WhatsApp - resolved outbox id={OutboxId} orgid={OrgId} recipient={Recipient} to '{ResolvedStatus}' via wamid={Wamid}.",
+                        resolvedOutboxId.Value, orgId, recipient, resolvedStatus, wamid);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WF: Reply Capture WhatsApp - failed to resolve outbox ticket for orgid={OrgId} recipient={Recipient} wamid={Wamid}.", orgId, recipient, wamid);
+            }
         }
     }
 
